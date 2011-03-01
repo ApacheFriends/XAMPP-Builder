@@ -45,5 +45,9 @@ class Component(object):
             raise StandardError("Unknown archive format '%s'" % ext)
         
         return os.path.join(self.config.archivesPath, '%s-%s.%s' % (self.name.lower(), self.version, archive_ext))
+    
+    @property
+    def buildPath(self):
+        return os.path.join(self.config.buildsPath, self.name.lower())
         
         

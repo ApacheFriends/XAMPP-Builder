@@ -35,8 +35,8 @@ class Config(object):
         return self.preparePath(self.configParser.get('XAMPP Builder', 'archives'))
 
     @property
-    def build_dir(self):
-        return self.preparePath(self.configParser.get('XAMPP Builder', 'build_dir'))
+    def buildsPath(self):
+        return self.preparePath(self.configParser.get('XAMPP Builder', 'builds'))
     
     '''
       Returns an normalised and absolut path for any path given.
