@@ -18,7 +18,9 @@ class Config(object):
         self.config_file = config_file
         self.platform = platform
 
-        self.configParser = SafeConfigParser()
+        self.configParser = SafeConfigParser({
+            'confdir': '%(prefix)s/etc'
+        })
         self.configParser.read([self.config_file])
         
         '''
@@ -37,6 +39,14 @@ class Config(object):
     @property
     def buildsPath(self):
         return self.preparePath(self.configParser.get('XAMPP Builder', 'builds'))
+    
+    @property
+    def prefixPath(self):
+        return self.preparePath(self.configParser.get(self.platform, 'prefix'))
+        
+    @property
+    def confdirPath(self):
+        return self.preparePath(self.configParser.get(self.platform, 'confdir'))
     
     '''
       Returns an normalised and absolut path for any path given.

@@ -8,6 +8,7 @@
 '''
 
 import os.path
+import string
 
 class Component(object):
 
@@ -29,6 +30,33 @@ class Component(object):
         
         with open(version_file, 'r') as f:
             self.version = f.readline().strip(' \n\r\t')
+    
+    '''
+      Returns the flags used for configure or
+      cmake. Flags from dependencies are added
+      to this later. Possible variables are
+      substituted later.
+    '''
+    def configureFlags(self):
+        return [
+            '--prefix=$PREFIX', 
+            '--sysconfdir=$SYSCONFDIR'
+        ]
+        
+    '''
+      Returns the fully computable flags which can be
+      passed in quotes and joined with an space to
+      configure or cmake or whatever.
+    '''
+    def computedConfigureFlags(self):
+        return map(lambda x: self.substituteCommonVariables(x), self.configureFlags())
+    
+    def substituteCommonVariables(self, s):
+        vars = {
+            'PREFIX': self.config.prefixPath,
+            'SYSCONFDIR': self.config.confdirPath
+        }
+        return string.Template(s).safe_substitute(vars)
     
     @property
     def sourceArchivePath(self):
