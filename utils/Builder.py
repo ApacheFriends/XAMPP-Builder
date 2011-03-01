@@ -10,6 +10,11 @@
 
 from optparse import OptionParser
 
+import sys
+import os
+import os.path
+import urllib
+
 from utils.Config import Config
 from components import KNOWN_COMPONENTS
 
@@ -26,6 +31,8 @@ class Builder(object):
 
         if action == 'build':
             self.build(args)
+        elif action == 'download':
+            self.download(args)
         else:
             print "Unknown action '%s'" % action
             exit(1)
@@ -60,6 +67,47 @@ class Builder(object):
                 raise StandardError('Try to register %s twice!' % component.name)
                 
             self.components[component.name] = component
+
+    def findComponents(self, args):
+        if len(args) == 0 or 'all' in args:
+            return self.components.values()
+        
+        args = map(lambda x: x.lower(), args)
+        components = []
+        
+        for (key, value) in self.components.iteritems():
+            if key.lower() in args:
+                components.append(value)
+        
+        return components
+
+    def download(self, args):
+        components = self.findComponents(args)
+        
+        '''
+          Make sure the archive dir exists and
+          is writeable.
+        '''
+        
+        for c in components:
+            self.downloadComponent(c)
+
+    def downloadComponent(self, c):
+        if not os.path.isdir(self.config.archivesPath):
+            os.mkdir(self.config.archivesPath)
+        
+        if not os.path.exists(c.sourceArchiveFile):
+            print "%s: Download '%s'..." % (c.name, c.download_url),
+            sys.stdout.flush()
+            try:
+                urllib.urlretrieve(c.download_url, c.sourceArchiveFile  + '.temp')
+                os.rename(c.sourceArchiveFile  + '.temp', c.sourceArchiveFile)
+                print 'done.'
+            except:
+                print 'failed!'
+                raise
+        else:
+            print "%s: Download already downloaded." % (c.name)
 
     def build(self, args):
         print 'Build component'

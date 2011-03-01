@@ -51,6 +51,19 @@ class Component(object):
     def computedConfigureFlags(self):
         return map(lambda x: self.substituteCommonVariables(x), self.configureFlags())
     
+    '''
+      Returns the environment for the configure
+      or cmake command.
+    '''
+    def configureEnvironment(self):
+        return []
+    
+    def configureCommand(self):
+        return './configure'
+    
+    def computedConfigure(self):
+        return ' '.join([self.configureCommand()] + self.computedConfigureFlags())
+    
     def substituteCommonVariables(self, s):
         vars = {
             'PREFIX': self.config.prefixPath,
@@ -59,7 +72,7 @@ class Component(object):
         return string.Template(s).safe_substitute(vars)
     
     @property
-    def sourceArchivePath(self):
+    def sourceArchiveFile(self):
         archive_ext = None
         (j, filename) = os.path.split(self.download_url)
         
