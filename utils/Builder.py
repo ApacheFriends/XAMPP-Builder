@@ -34,6 +34,7 @@ class Builder(object):
 	parser = OptionParser()
 
         parser.add_option("-c", "--config", dest="config",
+                          default="default.ini",
                           help="The config used for building XAMPP.")
 
         (options, args) = parser.parse_args()
