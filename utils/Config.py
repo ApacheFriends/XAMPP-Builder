@@ -20,8 +20,8 @@ class Config(object):
         self.configParser.read([self.config_file])
 
     @property
-    def download_dir(self):
-        return self.configParser.get('XAMPP Builder', 'download_dir')
+    def archivesPath(self):
+        return self.configParser.get('XAMPP Builder', 'archives')
 
     @property
     def build_dir(self):

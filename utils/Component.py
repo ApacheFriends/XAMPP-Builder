@@ -33,17 +33,17 @@ class Component(object):
     @property
     def sourceArchivePath(self):
         archive_ext = None
-        (j, ext) = os.path.splitext(self.download_url)
+        (j, filename) = os.path.split(self.download_url)
         
-        if ext == '.gz' or ext == '.tgz' or ext == '.Z':
+        if filename.endswith('.tar.gz') or filename.endswith('.tgz') or filename.endswith('.tar.Z'):
             archive_ext = 'tar.gz'
-        elif ext == '.bz2':
+        elif filename.endswith('.tar.bz2'):
             archive_ext = 'tar.bz2'
-        elif ext == '.tar':
+        elif filename.endswith('.tar'):
             archive_ext = 'tar'
         else:
             raise StandardError("Unknown archive format '%s'" % ext)
         
-        return os.path.join(config.download_dir, '%s-%s.%s' % (self.ascii_lowercase, self.version, archive_ext))
+        return os.path.join(self.config.archivesPath, '%s-%s.%s' % (self.name.lower(), self.version, archive_ext))
         
         
