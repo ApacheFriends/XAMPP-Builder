@@ -84,15 +84,15 @@ class Builder(object):
     def download(self, args):
         components = self.findComponents(args)
         
+        for c in components:
+            self.downloadComponent(c)
+
+    def downloadComponent(self, c):
         '''
           Make sure the archive dir exists and
           is writeable.
         '''
         
-        for c in components:
-            self.downloadComponent(c)
-
-    def downloadComponent(self, c):
         if not os.path.isdir(self.config.archivesPath):
             os.mkdir(self.config.archivesPath)
         
