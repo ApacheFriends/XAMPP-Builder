@@ -126,14 +126,26 @@ class Builder(object):
             self.runConfigureCommand(c)
 
     def runConfigureCommand(self, component):
-        environment = []
+        environment = {}
         command = None
         commandArguments = []
 
         command = component.configureCommand()
         commandArguments.extend(component.computedConfigureFlags())
+        environment = dict(component.configureEnvironment())
 
         for d in component.dependencies:
             commandArguments.extend(d.computedConfigureFlags(self, component))
+            oldCFlags = ""
+            oldLDFlags = ""
+            
+            try:
+                oldCFlags = environment['CFLAGS']
+                oldLDFlags = environment['LDFLAGS']
+            except KeyError:
+                pass
 
-        print 'configure command: %s' % ' '.join([command] + commandArguments) 
+            environment['CFLAGS'] = ' '.join([oldCFlags] + d.computedCFlags(self, component))
+            environment['LDFLAGS'] = ' '.join([oldLDFlags] + d.computedLDFlags(self, component))
+
+        print 'configure command: %s ENV: %s' % (' '.join([command] + commandArguments), environment)

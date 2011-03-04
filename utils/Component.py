@@ -57,7 +57,7 @@ class Component(object):
       or cmake command.
     '''
     def configureEnvironment(self):
-        return []
+        return {}
     
     def configureCommand(self):
         return './configure'
