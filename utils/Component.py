@@ -19,6 +19,7 @@ class Component(object):
         self.name = name
         self.config = config
         self.download_url = None
+        self.dependencies = []
         
         '''
           Read the version of this component.
@@ -60,9 +61,6 @@ class Component(object):
     
     def configureCommand(self):
         return './configure'
-    
-    def computedConfigure(self):
-        return ' '.join([self.configureCommand()] + self.computedConfigureFlags())
     
     def substituteCommonVariables(self, s):
         vars = {

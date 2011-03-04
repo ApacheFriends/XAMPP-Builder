@@ -81,6 +81,16 @@ class Builder(object):
         
         return components
 
+    def findComponent(self, componentName):
+        assert componentName != None
+        
+        componentList = self.findComponents([componentName])
+
+        if len(componentList) == 0:
+            return None
+        else:
+            return componentList[0]
+
     def download(self, args):
         components = self.findComponents(args)
         
@@ -110,4 +120,20 @@ class Builder(object):
             print "%s: Download already downloaded." % (c.name)
 
     def build(self, args):
-        print 'Build component'
+        components = self.findComponents(args)
+        
+        for c in components:
+            self.runConfigureCommand(c)
+
+    def runConfigureCommand(self, component):
+        environment = []
+        command = None
+        commandArguments = []
+
+        command = component.configureCommand()
+        commandArguments.extend(component.computedConfigureFlags())
+
+        for d in component.dependencies:
+            commandArguments.extend(d.computedConfigureFlags(self, component))
+
+        print 'configure command: %s' % ' '.join([command] + commandArguments) 
