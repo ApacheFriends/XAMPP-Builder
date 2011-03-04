@@ -47,6 +47,30 @@ class Config(object):
     @property
     def confdirPath(self):
         return self.preparePath(self.configParser.get(self.platform, 'confdir'))
+
+    @property
+    def defaultCFlags(self):
+        cflags = ""
+
+        try:
+            cflags = ' '.join([cflags, self.configParser.get('XAMPP Builder', 'cflags')])
+            cflags = ' '.join([cflags, self.configParser.get(self.platform, 'cflags')])
+        except KeyError:
+            pass
+
+        return cflags
+
+    @property
+    def defaultLDFlags(self):
+        ldflags = ''
+
+        try:
+            ldflags = ' '.join([ldflags, self.configParser.get('XAMPP Builder', 'ldflags')])
+            ldflags = ' '.join([ldflags, self.configParser.get(self.platform, 'ldflags')])
+        except KeyError:
+            pass
+
+        return ldflags
     
     '''
       Returns an normalised and absolut path for any path given.
