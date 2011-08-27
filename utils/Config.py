@@ -1,4 +1,4 @@
-'''
+"""
   XAMPP Builder
   Copyright 2011 Apache Friends, GPLv2+ licensed
   ==============================================
@@ -6,9 +6,9 @@
   The Config object encapsulate everything that
   is configurable like the download_dir or the
   build_dir.
-'''
+"""
 
-from ConfigParser import SafeConfigParser
+from ConfigParser import SafeConfigParser, NoOptionError
 
 import os.path
 
@@ -23,10 +23,7 @@ class Config(object):
         })
         self.configParser.read([self.config_file])
         
-        '''
-          If no base for relative paths is given,
-          we use the dir in which the config resides
-        '''
+        ## If no base for relative paths is given, we use the dir in which the config resides
         if rel_base is None:
             rel_base = os.path.dirname(config_file)
         
@@ -67,15 +64,31 @@ class Config(object):
         try:
             ldflags = ' '.join([ldflags, self.configParser.get('XAMPP Builder', 'ldflags')])
             ldflags = ' '.join([ldflags, self.configParser.get(self.platform, 'ldflags')])
-        except KeyError:
+        except NoOptionError:
             pass
 
         return ldflags
-    
-    '''
-      Returns an normalised and absolut path for any path given.
-    '''
+
+    @property
+    def archs(self):
+        raw = ""
+        archs = []
+
+        try:
+            raw = self.configParser.get(self.platform, 'archs')
+        except NoOptionError:
+            pass
+
+        for arch in raw.split(','):
+            if len(arch.strip()):
+                archs.extend([arch])
+
+        return archs
+
     def preparePath(self, path):
+        """
+         Returns an normalised and absolut path for any path given.
+        """
         if not os.path.isabs(path):
             path = os.path.join(self.rel_base, path)
         

@@ -1,20 +1,16 @@
-'''
+"""
   XAMPP Builder
   Copyright 2011 Apache Friends, GPLv2+ licensed
   ==============================================
-'''
+"""
 
 import os.path
 
 def isMachO(file):
     (path, ext) = os.path.splitext(file)
     
-    '''
-      It's a java class file and no mach-o file.
-      This special case is because java class files
-      have the same magic number as fat-binaries.
-    '''
-    
+    # It's a java class file and no mach-o file. This special case is because java class files have the same magic
+    # number as fat-binaries.
     if ext == '.class':
         return False
 

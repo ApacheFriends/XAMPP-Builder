@@ -1,4 +1,4 @@
-'''
+"""
   XAMPP Builder
   Copyright 2011 Apache Friends, GPLv2+ licensed
   ==============================================
@@ -6,14 +6,15 @@
   The Builder class is the main class of the builder
   and coordinates everything that happen during the
   building of XAMPP.
-'''
-
-from optparse import OptionParser
-
+"""
+import string
 import sys
 import os
 import os.path
 import urllib
+
+from optparse import OptionParser
+from subprocess import check_call
 
 from utils.Config import Config
 from components import KNOWN_COMPONENTS
@@ -25,7 +26,7 @@ class Builder(object):
         self.components = {}
 
     def run(self):
-        (action, args) = self.parseComandolineArguments()
+        (action, args) = self.parseCommandlineArguments()
 
         self.setupComponents()
 
@@ -35,10 +36,10 @@ class Builder(object):
             self.download(args)
         else:
             print "Unknown action '%s'" % action
-            exit(1)
+            sys.exit(1)
 
-    def parseComandolineArguments(self):
-	parser = OptionParser()
+    def parseCommandlineArguments(self):
+        parser = OptionParser()
 
         parser.add_option("-c", "--config", dest="config",
                           default="default.ini",
@@ -54,7 +55,19 @@ class Builder(object):
         if len(args) < 1:
             parser.error("Specify an action!")
 
-        return (args[0], args[1:])
+        return args[0], args[1:]
+
+    def substituteArchVariables(self, s, archs):
+        vars = {
+            'ARCH_FLAGS': ' '.join(['-arch %s' % arch for arch in archs])
+        }
+
+        if len(archs) == 1:
+            vars['ARCH'] = archs[0]
+        else:
+            vars['ARCH'] = 'universal'
+
+        return string.Template(s).safe_substitute(vars)
 
     def setupComponents(self):
         
@@ -82,11 +95,11 @@ class Builder(object):
         return components
 
     def findComponent(self, componentName):
-        assert componentName != None
+        assert componentName is not None
         
         componentList = self.findComponents([componentName])
 
-        if len(componentList) == 0:
+        if not len(componentList):
             return None
         else:
             return componentList[0]
@@ -98,11 +111,11 @@ class Builder(object):
             self.downloadComponent(c)
 
     def downloadComponent(self, c):
-        '''
+        """
           Make sure the archive dir exists and
           is writeable.
-        '''
-        
+        """
+
         if not os.path.isdir(self.config.archivesPath):
             os.mkdir(self.config.archivesPath)
         
@@ -117,25 +130,50 @@ class Builder(object):
                 print 'failed!'
                 raise
         else:
-            print "%s: Download already downloaded." % (c.name)
+            print "%s: Download already downloaded." % c.name
 
     def build(self, args):
         components = self.findComponents(args)
         
         for c in components:
-            self.runConfigureCommand(c)
 
-    def runConfigureCommand(self, component):
-        environment = {}
-        command = None
+            if c.supportsOnPassUniversalBuild:
+                self.unpackComponent(c)
+                self.runConfigureCommand(c, self.config.archs)
+                self.runBuildCommand(c, self.config.archs)
+                self.runInstallCommand(c)
+
+    def unpackComponent(self, c):
+        # Change our working dir to the source dir
+        os.chdir(c.workingDir)
+
+        tar_process = ['/usr/bin/tar']
+        (path, ext) = os.path.splitext(c.sourceArchiveFile)
+
+        if ext == '.gz' or ext == '.tgz' or ext == '.Z':
+            tar_process.append('xpzf')
+        elif ext == '.bz2':
+            tar_process.append('xpjf')
+        elif ext == '.tar':
+            tar_process.append('xpf')
+        else:
+            raise StandardError('Unknown archive format')
+
+        tar_process.extend([c.sourceArchiveFile,
+                            '--strip', '1'])
+
+        print("==> Unpack %s (work dir %s)" % (c.name, c.workingDir))
+        check_call(tar_process)
+
+    def runConfigureCommand(self, c, archs):
         commandArguments = []
 
-        command = component.configureCommand()
-        commandArguments.extend(component.computedConfigureFlags())
-        environment = dict(component.configureEnvironment())
+        command = c.configureCommand()
+        commandArguments.extend(c.computedConfigureFlags())
+        environment = dict(c.configureEnvironment())
 
-        for d in component.dependencies:
-            commandArguments.extend(d.computedConfigureFlags(self, component))
+        for d in c.dependencies:
+            commandArguments.extend(d.computedConfigureFlags(self, c))
             oldCFlags = ""
             oldLDFlags = ""
             
@@ -145,7 +183,52 @@ class Builder(object):
             except KeyError:
                 pass
 
-            environment['CFLAGS'] = ' '.join([oldCFlags] + d.computedCFlags(self, component))
-            environment['LDFLAGS'] = ' '.join([oldLDFlags] + d.computedLDFlags(self, component))
+            environment['CFLAGS'] = ' '.join([oldCFlags] + d.computedCFlags(self, c))
+            environment['LDFLAGS'] = ' '.join([oldLDFlags] + d.computedLDFlags(self, c))
 
-        print 'configure command: %s ENV: %s' % (' '.join([command] + commandArguments), environment)
+        commandArguments = map(lambda x: self.substituteArchVariables(x, archs), commandArguments)
+
+        for key in environment.copy():
+            environment[key] = self.substituteArchVariables(environment[key], archs)
+
+        print("==> Configure %s" % c.name)
+        check_call([command] + commandArguments, env=environment)
+
+    def runBuildCommand(self, c, archs):
+        commandArguments = []
+
+        command = c.buildCommand()
+        commandArguments.extend(c.computedBuildFlags())
+        environment = dict(c.buildEnvironment())
+
+        for d in c.dependencies:
+            commandArguments.extend(d.computedBuildFlags(self, c))
+            oldCFlags = ""
+            oldLDFlags = ""
+
+            try:
+                oldCFlags = environment['CFLAGS']
+                oldLDFlags = environment['LDFLAGS']
+            except KeyError:
+                pass
+
+            environment['CFLAGS'] = ' '.join([oldCFlags] + d.computedCFlags(self, c))
+            environment['LDFLAGS'] = ' '.join([oldLDFlags] + d.computedLDFlags(self, c))
+
+        commandArguments = map(lambda x: self.substituteArchVariables(x, archs), commandArguments)
+
+        for key in environment.copy():
+            environment[key] = self.substituteArchVariables(environment[key], archs)
+
+        print("==> Build %s" % c.name)
+        check_call([command] + commandArguments, env=environment)
+
+    def runInstallCommand(self, c):
+        commandArguments = []
+
+        command = c.installCommand()
+        commandArguments.extend(c.computedInstallFlags())
+        environment = dict(c.installEnvironment())
+
+        print("==> Install %s (to %s)" % (c.name, c.buildPath))
+        check_call([command] + commandArguments, env=environment)

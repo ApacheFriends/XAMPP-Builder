@@ -1,21 +1,29 @@
-'''
+"""
   XAMPP Builder
   Copyright 2011 Apache Friends, GPLv2+ licensed
   ==============================================
 
-'''
+"""
 
 from string import Template
 from utils.Component import Component
 
 class Dependency(object):
     
-    def __init__(self, componentName, configureFlags=[], cFlags=[], ldFlags=[], environment=[]):
-        assert componentName != None
-        assert configureFlags != None
-        assert cFlags != None
-        assert ldFlags != None
-        assert environment != None
+    def __init__(self, componentName, configureFlags=None, cFlags=None, ldFlags=None, environment=None):
+        assert componentName is not None
+
+        if not configureFlags:
+            configureFlags = []
+
+        if not cFlags:
+            cFlags = []
+
+        if not ldFlags:
+            ldFlags = []
+
+        if not environment:
+            environment = {}
 
         self.configureFlags = configureFlags
         self.componentName = componentName

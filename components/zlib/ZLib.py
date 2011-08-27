@@ -1,10 +1,10 @@
-'''
+"""
   XAMPP Builder
   Copyright 2011 Apache Friends, GPLv2+ licensed
   ==============================================
   
   The ZLib component.
-'''
+"""
 
 from utils.Component import Component
 
