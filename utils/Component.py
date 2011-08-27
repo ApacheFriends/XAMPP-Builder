@@ -96,7 +96,7 @@ class Component(object):
     def installFlags(self):
         return [
             "install",
-            "DESTDIR=%s" % self.buildPath
+            "DESTDIR=${DEST_DIR}"
         ]
 
     def computedInstallFlags(self):

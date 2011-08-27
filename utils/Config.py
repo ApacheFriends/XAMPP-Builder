@@ -81,7 +81,7 @@ class Config(object):
 
         for arch in raw.split(','):
             if len(arch.strip()):
-                archs.extend([arch])
+                archs.extend([arch.strip()])
 
         return archs
 

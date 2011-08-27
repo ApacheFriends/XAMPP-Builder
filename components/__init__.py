@@ -6,7 +6,9 @@
 '''
 
 import components.zlib.ZLib
+import components.openssl.OpenSSL
 
 KNOWN_COMPONENTS = [
-    components.zlib.ZLib
+    components.zlib.ZLib,
+    components.openssl.OpenSSL
 ]

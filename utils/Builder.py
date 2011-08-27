@@ -7,10 +7,13 @@
   and coordinates everything that happen during the
   building of XAMPP.
 """
+import atexit
+import shutil
 import string
 import sys
 import os
 import os.path
+from tempfile import mkdtemp
 import urllib
 
 from optparse import OptionParser
@@ -59,7 +62,7 @@ class Builder(object):
 
     def substituteArchVariables(self, s, archs):
         vars = {
-            'ARCH_FLAGS': ' '.join(['-arch %s' % arch for arch in archs])
+            'ARCH_FLAGS': ' '.join(['-arch %s' % arch for arch in archs]),
         }
 
         if len(archs) == 1:
@@ -81,6 +84,7 @@ class Builder(object):
                 
             self.components[component.name] = component
 
+
     def findComponents(self, args):
         if len(args) == 0 or 'all' in args:
             return self.components.values()
@@ -91,7 +95,7 @@ class Builder(object):
         for (key, value) in self.components.iteritems():
             if key.lower() in args:
                 components.append(value)
-        
+
         return components
 
     def findComponent(self, componentName):
@@ -134,14 +138,37 @@ class Builder(object):
 
     def build(self, args):
         components = self.findComponents(args)
-        
+
         for c in components:
 
-            if c.supportsOnPassUniversalBuild:
+            if c.supportsOnPassUniversalBuild or len(self.config.archs) <= 1:
                 self.unpackComponent(c)
                 self.runConfigureCommand(c, self.config.archs)
                 self.runBuildCommand(c, self.config.archs)
-                self.runInstallCommand(c)
+                self.runInstallCommand(c, c.buildPath)
+            else:
+                arch_build_dirs = {}
+
+                for arch in self.config.archs:
+                    arch_build_dirs[dir] = mkdtemp(prefix="xampp-builder-%s-%s-" % (c.name, arch))
+
+                def cleanUp(dirs):
+                    for (key, value) in dirs.iteritems():
+                        shutil.rmtree(value)
+
+                atexit.register(cleanUp, arch_build_dirs)
+
+                for arch in self.config.archs:
+                    if os.path.isdir(c.workingDir):
+                        shutil.rmtree(c.workingDir)
+                    os.mkdir(c.workingDir)
+
+                    self.unpackComponent(c)
+                    self.runConfigureCommand(c, archs=[arch])
+                    self.runBuildCommand(c, archs=[arch])
+                    self.runInstallCommand(c, arch_build_dirs[dir])
+
+
 
     def unpackComponent(self, c):
         # Change our working dir to the source dir
@@ -170,7 +197,10 @@ class Builder(object):
 
         command = c.configureCommand()
         commandArguments.extend(c.computedConfigureFlags())
-        environment = dict(c.configureEnvironment())
+        environment = dict(os.environ)
+
+        for (key, value) in c.configureEnvironment().iteritems():
+            environment[key] = value
 
         for d in c.dependencies:
             commandArguments.extend(d.computedConfigureFlags(self, c))
@@ -199,10 +229,12 @@ class Builder(object):
 
         command = c.buildCommand()
         commandArguments.extend(c.computedBuildFlags())
-        environment = dict(c.buildEnvironment())
+        environment = dict(os.environ)
+
+        for (key, value) in c.buildEnvironment().iteritems():
+            environment[key] = value
 
         for d in c.dependencies:
-            commandArguments.extend(d.computedBuildFlags(self, c))
             oldCFlags = ""
             oldLDFlags = ""
 
@@ -221,14 +253,19 @@ class Builder(object):
             environment[key] = self.substituteArchVariables(environment[key], archs)
 
         print("==> Build %s" % c.name)
-        check_call([command] + commandArguments, env=environment)
+        check_call([command] + commandArguments, env=environment, shell=True)
 
-    def runInstallCommand(self, c):
+    def runInstallCommand(self, c, dest_dir):
         commandArguments = []
 
         command = c.installCommand()
         commandArguments.extend(c.computedInstallFlags())
-        environment = dict(c.installEnvironment())
+        environment = dict(os.environ)
 
-        print("==> Install %s (to %s)" % (c.name, c.buildPath))
+        for (key, value) in c.installEnvironment().iteritems():
+            environment[key] = string.Template(value).safe_substitute({'DEST_DIR': dest_dir})
+
+        commandArguments = map(lambda x: string.Template(x).safe_substitute({'DEST_DIR': dest_dir}), commandArguments)
+
+        print("==> Install %s (to %s)" % (c.name, dest_dir))
         check_call([command] + commandArguments, env=environment)
