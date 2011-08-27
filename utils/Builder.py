@@ -8,6 +8,7 @@
   building of XAMPP.
 """
 import atexit
+import json
 import shutil
 import string
 import sys
@@ -16,7 +17,7 @@ import os.path
 from tempfile import mkdtemp
 import urllib
 
-from optparse import OptionParser
+from optparse import OptionParser, OptionGroup
 from subprocess import check_call
 
 from utils.Config import Config
@@ -69,23 +70,36 @@ class Builder(object):
             self.build(args)
         elif action == 'download':
             self.download(args)
+        elif action == 'dep':
+            self.dependencies(args)
         else:
             print "Unknown action '%s'" % action
             sys.exit(1)
 
     def parseCommandlineArguments(self):
-        parser = OptionParser()
+        parser = OptionParser(usage="Usage: %prog [options] download|build|dep [component(s)]")
 
         parser.add_option("-c", "--config", dest="config",
                           default="default.ini",
                           help="The config used for building XAMPP.")
 
-        (options, args) = parser.parse_args()
+        group = OptionGroup(parser, "Dependency Options (dep)")
 
-        if options.config is None:
+        group.add_option("", "--json", dest="json",
+                          action="store_true", default=False,
+                          help="Print dependency information as parsable json list.")
+        group.add_option("", "--missing", dest="missing",
+                          action="store_true", default=False,
+                          help="Automaticlly add components that are not builded yet.")
+
+        parser.add_option_group(group)
+
+        (self.options, args) = parser.parse_args()
+
+        if self.options.config is None:
             parser.error("Use -c to specify a config file!")
         else:
-            self.config = Config(options.config, "Mac OS X")
+            self.config = Config(self.options.config, "Mac OS X")
 
         if len(args) < 1:
             parser.error("Specify an action!")
@@ -107,8 +121,6 @@ class Builder(object):
     def setupComponents(self):
         
         for c in KNOWN_COMPONENTS:
-            print 'debug: instantiate %s' % c
-            
             component = c(config=self.config)
             
             if component.name in self.components:
@@ -340,3 +352,65 @@ class Builder(object):
 
             if success is False:
                 raise StandardError("Could not universalize %s (%s)" % (file, arch_build_dirs))
+
+    def componentsDependingOn(self, component):
+        dependents = []
+
+        for c in self.components.values():
+            for d in c.dependencies:
+                if d.componentName.lower() == component.name.lower():
+                    dependents.append(c)
+
+        return dependents
+
+    def dependencies(self, args):
+        components_to_consider = []
+
+        if not len(args):
+            components_to_consider = self.components.values()
+        else:
+            components_to_consider = self.findComponents(args)
+
+            if self.options.missing:
+                for c in self.components.values():
+                    if not os.path.isdir(c.buildPath):
+                        components_to_consider.append(c)
+
+            # Find all components that are directly or indirectly
+            # depended on these components
+
+            foundNew = True
+
+            while foundNew:
+                foundNew = False
+
+                for c in components_to_consider:
+                    dependents = self.componentsDependingOn(c)
+
+                    for d in dependents:
+                        if d not in components_to_consider:
+                            components_to_consider.append(d)
+                            foundNew = True
+
+
+        resolved = []
+        unhandled = components_to_consider
+
+        while len(unhandled):
+            for c in unhandled:
+                satisfied = True
+
+                for d in c.dependencies:
+                    if self.findComponent(d.componentName) not in resolved and \
+                        self.findComponent(d.componentName) in unhandled:
+                        satisfied = False
+
+                if satisfied:
+                    resolved.append(c)
+                    unhandled.remove(c)
+
+        if self.options.json:
+            print(json.dumps([c.name.lower() for c in resolved]))
+        else:
+            for c in resolved:
+                print(c.name.lower())

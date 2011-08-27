@@ -2,15 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="871b1ef0-cd82-4b15-96e7-043cdf11c6af" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/utils/FileUniversalizer.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/components/__init__.py" afterPath="$PROJECT_DIR$/components/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/components/openssl/__init__.py" afterPath="$PROJECT_DIR$/components/openssl/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/components/zlib/ZLib.py" afterPath="$PROJECT_DIR$/components/zlib/ZLib.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utils/Builder.py" afterPath="$PROJECT_DIR$/utils/Builder.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utils/Component.py" afterPath="$PROJECT_DIR$/utils/Component.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utils/Dependency.py" afterPath="$PROJECT_DIR$/utils/Dependency.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utils/file.py" afterPath="$PROJECT_DIR$/utils/file.py" />
     </list>
     <ignored path="XAMPP-Builder.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -72,7 +64,7 @@
       <file leaf-file-name="Dependency.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/utils/Dependency.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="53" column="62" selection-start="1682" selection-end="1682" vertical-scroll-proportion="0.0">
+            <state line="29" column="26" selection-start="662" selection-end="675" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -90,7 +82,7 @@
       <file leaf-file-name="Builder.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/utils/Builder.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="53" column="25" selection-start="1343" selection-end="1343" vertical-scroll-proportion="0.18716578">
+            <state line="396" column="26" selection-start="12760" selection-end="12760" vertical-scroll-proportion="0.35828876">
               <folding />
             </state>
           </provider>
@@ -675,13 +667,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils/Dependency.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="53" column="62" selection-start="1682" selection-end="1682" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/utils/file.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="71" column="27" selection-start="1980" selection-end="1980" vertical-scroll-proportion="0.0">
@@ -738,9 +723,16 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/utils/Dependency.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="29" column="26" selection-start="662" selection-end="675" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/utils/Builder.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="53" column="25" selection-start="1343" selection-end="1343" vertical-scroll-proportion="0.18716578">
+        <state line="396" column="26" selection-start="12760" selection-end="12760" vertical-scroll-proportion="0.35828876">
           <folding />
         </state>
       </provider>
