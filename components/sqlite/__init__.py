@@ -5,4 +5,4 @@
 
 """
 
-from components.openssl.OpenSSL import OpenSSL
+from components.sqlite.SQLite import SQLite

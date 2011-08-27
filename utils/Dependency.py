@@ -5,6 +5,7 @@
 
 """
 
+import os.path
 from string import Template
 from utils.Component import Component
 
@@ -50,7 +51,7 @@ class Dependency(object):
             raise StandartError("Did not found a valid component for '%s'. Got '%s'" % (self.componentName, component))
 
         vars = {
-            'COMPONENT_PATH': component.buildPath
+            'COMPONENT_PATH': os.path.join(component.buildPath, builder.config.prefixPath[1:])
         }
 
         return map(lambda x: Template(x).substitute(vars), value)

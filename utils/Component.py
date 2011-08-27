@@ -102,6 +102,11 @@ class Component(object):
     def computedInstallFlags(self):
         return map(lambda x: self.substituteCommonVariables(x), self.installFlags())
 
+    def extraTarFlags(self):
+        return [
+            '--strip', '1'
+        ]
+
     @property
     def sourceArchiveFile(self):
         archive_ext = None

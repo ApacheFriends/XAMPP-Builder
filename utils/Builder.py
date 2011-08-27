@@ -20,13 +20,45 @@ from optparse import OptionParser
 from subprocess import check_call
 
 from utils.Config import Config
+from utils.FileUniversalizer import MachOUniversalizer
+from utils.file import digestsInPath
 from components import KNOWN_COMPONENTS
+
+# Helpers
+def commonInDict(dictA, dictB):
+    common = dict()
+    uncommon_keys = []
+
+    for key in dictA:
+        if key in dictB and dictB[key] == dictA[key]:
+            common[key] = dictA[key]
+        else:
+            uncommon_keys.extend([key])
+
+    return common, uncommon_keys
+
+def ignoreFilesSet(files, rel_to=None):
+    def ignore_set(dir, dir_content):
+        ignore = set()
+        if rel_to is not None:
+            dir = os.path.relpath(dir, rel_to)
+
+        for file in files:
+            (dir_component, file_component) = os.path.split(file)
+            if (dir_component == dir and
+                file_component in dir_content):
+                ignore.add(file_component)
+
+        return ignore
+
+    return ignore_set
 
 class Builder(object):
 
     def __init__(self):
         self.config = None
         self.components = {}
+        self.fileUniversalizer = [MachOUniversalizer()]
 
     def run(self):
         (action, args) = self.parseCommandlineArguments()
@@ -150,7 +182,7 @@ class Builder(object):
                 arch_build_dirs = {}
 
                 for arch in self.config.archs:
-                    arch_build_dirs[dir] = mkdtemp(prefix="xampp-builder-%s-%s-" % (c.name, arch))
+                    arch_build_dirs[arch] = mkdtemp(prefix="xampp-builder-%s-%s-" % (c.name, arch))
 
                 def cleanUp(dirs):
                     for (key, value) in dirs.iteritems():
@@ -166,8 +198,9 @@ class Builder(object):
                     self.unpackComponent(c)
                     self.runConfigureCommand(c, archs=[arch])
                     self.runBuildCommand(c, archs=[arch])
-                    self.runInstallCommand(c, arch_build_dirs[dir])
+                    self.runInstallCommand(c, arch_build_dirs[arch])
 
+                self.universalizeComponent(c, arch_build_dirs)
 
 
     def unpackComponent(self, c):
@@ -186,8 +219,7 @@ class Builder(object):
         else:
             raise StandardError('Unknown archive format')
 
-        tar_process.extend([c.sourceArchiveFile,
-                            '--strip', '1'])
+        tar_process.extend([c.sourceArchiveFile] + c.extraTarFlags())
 
         print("==> Unpack %s (work dir %s)" % (c.name, c.workingDir))
         check_call(tar_process)
@@ -269,3 +301,42 @@ class Builder(object):
 
         print("==> Install %s (to %s)" % (c.name, dest_dir))
         check_call([command] + commandArguments, env=environment)
+
+    def universalizeComponent(self, c, arch_build_dirs):
+        digests = {}
+
+        print("==> Universalize %s" % c.name)
+
+        for arch, path in arch_build_dirs.iteritems():
+            digests[arch] = digestsInPath(path)
+
+        common_dict = digests[digests.keys()[0]]
+
+        arch_depend_files = []
+
+        for arch in digests:
+            (common_dict, depend) = commonInDict(common_dict, digests[arch])
+
+            arch_depend_files.extend(depend)
+
+        if os.path.isdir(c.buildPath):
+            shutil.rmtree(c.buildPath)
+
+        # Copy the common files
+        src = arch_build_dirs[arch_build_dirs.keys()[0]]
+        shutil.copytree(src,
+                        c.buildPath,
+                        symlinks=True,
+                        ignore=ignoreFilesSet(arch_depend_files, rel_to=src))
+
+        for file in arch_depend_files:
+            success = False
+
+            for universalizer in self.fileUniversalizer:
+                if universalizer.applicableTo(file, arch_build_dirs):
+                    success = universalizer.universalizeFile(file, os.path.join(c.buildPath, file), arch_build_dirs)
+
+                    break
+
+            if success is False:
+                raise StandardError("Could not universalize %s (%s)" % (file, arch_build_dirs))
