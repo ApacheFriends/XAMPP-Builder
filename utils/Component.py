@@ -26,6 +26,11 @@ class Component(object):
         self.dependencies = []
         self._workingDir = None
         self.supportsOnPassUniversalBuild = True
+        self.patches = []
+        self.patches_dir = os.path.join(path, 'patches')
+        # Rel to includes/
+        self.includeDir = None
+        self.libDir = None
 
         # Read the version of this component.
         version_file = os.path.join(path, 'version')

@@ -50,8 +50,12 @@ class Dependency(object):
         if not isinstance(component, Component):
             raise StandartError("Did not found a valid component for '%s'. Got '%s'" % (self.componentName, component))
 
+        c_root = os.path.join(component.buildPath, builder.config.prefixPath[1:])
+
         vars = {
-            'COMPONENT_PATH': os.path.join(component.buildPath, builder.config.prefixPath[1:])
+            'COMPONENT_PATH': c_root,
+            'INCLUDE_PATH': os.path.join(c_root, 'includes', component.includeDir or ''),
+            'LIB_PATH': os.path.join(c_root, 'lib', component.libDir or '')
         }
 
         return map(lambda x: Template(x).substitute(vars), value)

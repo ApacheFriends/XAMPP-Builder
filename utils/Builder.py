@@ -236,6 +236,16 @@ class Builder(object):
         print("==> Unpack %s (work dir %s)" % (c.name, c.workingDir))
         check_call(tar_process)
 
+    def patchComponent(self, c):
+        if not len(c.patches):
+            return
+
+        print("==> Patch %s" % c.name)
+        os.chdir(c.workingDir)
+
+        for patch in c.patches:
+            check_call(['patch', '-p0', '-i', os.path.join(c.patches_dir, patch)])
+
     def runConfigureCommand(self, c, archs):
         commandArguments = []
 
@@ -364,8 +374,6 @@ class Builder(object):
         return dependents
 
     def dependencies(self, args):
-        components_to_consider = []
-
         if not len(args):
             components_to_consider = self.components.values()
         else:

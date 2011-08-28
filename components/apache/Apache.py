@@ -24,6 +24,11 @@ class Apache(Component):
             Dependency('OpenSSL', configureFlags=["--with-ssl=${COMPONENT_PATH}", "--enable-ssl=shared,${COMPONENT_PATH}"])
         ]
 
+        self.patches = [
+            'rm_envvars.patch',
+            'ulimit_fix.patch'
+        ]
+
     def configureFlags(self):
         flags = super(Apache, self).configureFlags()
 

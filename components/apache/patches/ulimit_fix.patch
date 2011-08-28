@@ -1,0 +1,16 @@
+--- support/apachectl.in.orig	2006-07-12 05:38:44.000000000 +0200
++++ support/apachectl.in	2009-06-04 17:13:02.000000000 +0200
+@@ -66,9 +66,10 @@
+ # ||||||||||||||||||||   END CONFIGURATION SECTION  ||||||||||||||||||||
+ 
+ # Set the maximum number of file descriptors allowed per child process.
+-if [ "x$ULIMIT_MAX_FILES" != "x" ] ; then
+-    $ULIMIT_MAX_FILES
+-fi
++#:XAMPP comment out to surpress ugly warnings
++#if [ "x$ULIMIT_MAX_FILES" != "x" ] ; then
++#    $ULIMIT_MAX_FILES
++#fi
+ 
+ ERROR=0
+ if [ "x$ARGV" = "x" ] ; then
