@@ -32,6 +32,15 @@ class Component(object):
         self.includeDir = None
         self.libDir = None
 
+        self.buildSteps = [
+            'unpack',
+            'patch',
+            'configure',
+            'build',
+            'install'
+            'universalize'
+        ]
+
         # Read the version of this component.
         version_file = os.path.join(path, 'version')
         

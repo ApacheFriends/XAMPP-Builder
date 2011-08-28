@@ -8,17 +8,19 @@
   building of XAMPP.
 """
 import atexit
+import collections
 import json
 import shutil
 import string
 import sys
 import os
 import os.path
-from tempfile import mkdtemp
 import urllib
 
 from optparse import OptionParser, OptionGroup
 from subprocess import check_call
+from inspect import isfunction
+from tempfile import mkdtemp
 
 from utils.Config import Config
 from utils.FileUniversalizer import MachOUniversalizer
@@ -186,10 +188,24 @@ class Builder(object):
         for c in components:
 
             if c.supportsOnPassUniversalBuild or len(self.config.archs) <= 1:
-                self.unpackComponent(c)
-                self.runConfigureCommand(c, self.config.archs)
-                self.runBuildCommand(c, self.config.archs)
-                self.runInstallCommand(c, c.buildPath)
+                for step in c.buildSteps:
+                    if step == 'unpack':
+                        self.unpackComponent(c)
+                    elif step == 'patch':
+                        self.patchComponent(c)
+                    elif step == 'configure':
+                        self.runConfigureCommand(c, self.config.archs)
+                    elif step == 'build':
+                        self.runBuildCommand(c, self.config.archs)
+                    elif step == 'install':
+                        self.runInstallCommand(c, c.buildPath)
+                    elif step == 'universalize':
+                        # Universalize is not needed in one pass builds
+                        pass
+                    elif isinstance(step, collections.Callable):
+                        step(component=c, archs=self.config.archs)
+                    else:
+                        raise StandardError("Don't now how to run step %s" % str(step))
             else:
                 arch_build_dirs = {}
 
@@ -202,17 +218,37 @@ class Builder(object):
 
                 atexit.register(cleanUp, arch_build_dirs)
 
+                archDependentSteps = c.buildSteps[0:c.buildSteps.index('universalize')]
+                archIndependentSteps = c.buildSteps[c.buildSteps.index('universalize'):]
+
                 for arch in self.config.archs:
                     if os.path.isdir(c.workingDir):
                         shutil.rmtree(c.workingDir)
                     os.mkdir(c.workingDir)
 
-                    self.unpackComponent(c)
-                    self.runConfigureCommand(c, archs=[arch])
-                    self.runBuildCommand(c, archs=[arch])
-                    self.runInstallCommand(c, arch_build_dirs[arch])
+                    for step in archDependentSteps:
+                        if step == 'unpack':
+                            self.unpackComponent(c)
+                        elif step == 'patch':
+                            self.patchComponent(c)
+                        elif step == 'configure':
+                            self.runConfigureCommand(c, archs=[arch])
+                        elif step == 'build':
+                            self.runBuildCommand(c, archs=[arch])
+                        elif step == 'install':
+                            self.runInstallCommand(c, c.buildPath)
+                        elif isinstance(step, collections.Callable):
+                            step(component=c, archs=[arch])
+                        else:
+                            raise StandardError("Don't now how to run arch dependent step %s" % str(step))
 
-                self.universalizeComponent(c, arch_build_dirs)
+                for step in archIndependentSteps:
+                    if step == 'universalize':
+                        self.universalizeComponent(c, arch_build_dirs)
+                    elif isinstance(step, collections.Callable):
+                        step(component=c, archs=self.config.archs)
+                    else:
+                        raise StandardError("Don't now how to run step %s" % str(step))
 
 
     def unpackComponent(self, c):
