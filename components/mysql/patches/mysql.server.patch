@@ -1,0 +1,11 @@
+--- support-files/mysql.server.sh.ori	2006-10-13 21:36:27.000000000 +0200
++++ support-files//mysql.server.sh		2006-10-13 21:37:26.000000000 +0200
+@@ -181,7 +181,7 @@ then
+   print_defaults="$bindir/mysql_print_defaults"
+ else
+   # Try to find basedir in /etc/my.cnf
+-  conf=/etc/my.cnf
++  conf=/Applications/XAMPP/etc/my.cnf
+   print_defaults=
+   if test -r $conf
+   then

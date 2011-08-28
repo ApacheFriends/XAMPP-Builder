@@ -12,6 +12,8 @@ import components.ncurses.Ncurses
 import components.sqlite.SQLite
 import components.expat.Expat
 import components.apache.Apache
+import components.mysql.MySQL
+import components.proftpd.ProFTPd
 
 KNOWN_COMPONENTS = [
     components.zlib.ZLib,
@@ -20,5 +22,7 @@ KNOWN_COMPONENTS = [
     components.ncurses.Ncurses,
     components.sqlite.SQLite,
     components.expat.Expat,
-    components.apache.Apache
+    components.apache.Apache,
+    components.mysql.MySQL,
+    components.proftpd.ProFTPd
 ]
