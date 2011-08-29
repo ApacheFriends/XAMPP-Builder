@@ -18,7 +18,7 @@ import components.proftpd.ProFTPd
 KNOWN_COMPONENTS = [
     components.zlib.ZLib,
     components.openssl.OpenSSL,
-    components.libltdl.LibLTDL,
+#    components.libltdl.LibLTDL,
     components.ncurses.Ncurses,
     components.sqlite.SQLite,
     components.expat.Expat,
