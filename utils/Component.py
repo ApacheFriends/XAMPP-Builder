@@ -28,6 +28,7 @@ class Component(object):
         self.supportsOnPassUniversalBuild = True
         self.patches = []
         self.patches_dir = os.path.join(path, 'patches')
+        self._resourcesPath = os.path.join(path, 'resources')
         # Rel to includes/
         self.includeDir = None
         self.libDir = None
@@ -156,5 +157,9 @@ class Component(object):
     @property
     def buildPath(self):
         return os.path.join(self.config.buildsPath, self.name.lower())
+
+    @property
+    def resourcesPath(self):
+        return self._resourcesPath
         
         

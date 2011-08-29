@@ -24,7 +24,7 @@ from tempfile import mkdtemp
 
 from utils.Config import Config
 from utils.FileUniversalizer import MachOUniversalizer
-from utils.file import digestsInPath
+from utils.file import digestsInPath, copytree
 from components import KNOWN_COMPONENTS
 
 # Helpers
@@ -203,7 +203,7 @@ class Builder(object):
                         # Universalize is not needed in one pass builds
                         pass
                     elif isinstance(step, collections.Callable):
-                        step(component=c, archs=self.config.archs)
+                        step(component=c, archs=self.config.archs, builder=self)
                     else:
                         raise StandardError("Don't now how to run step %s" % str(step))
             else:
@@ -238,7 +238,7 @@ class Builder(object):
                         elif step == 'install':
                             self.runInstallCommand(c, c.buildPath)
                         elif isinstance(step, collections.Callable):
-                            step(component=c, archs=[arch])
+                            step(component=c, archs=[arch], builder=self)
                         else:
                             raise StandardError("Don't now how to run arch dependent step %s" % str(step))
 
@@ -246,7 +246,7 @@ class Builder(object):
                     if step == 'universalize':
                         self.universalizeComponent(c, arch_build_dirs)
                     elif isinstance(step, collections.Callable):
-                        step(component=c, archs=self.config.archs)
+                        step(component=c, archs=self.config.archs, builder=self)
                     else:
                         raise StandardError("Don't now how to run step %s" % str(step))
 
@@ -458,3 +458,9 @@ class Builder(object):
         else:
             for c in resolved:
                 print(c.name.lower())
+
+    def copyComponent(self, c, dest=None):
+        if dest is None:
+            dest = self.config.prefixPath
+
+        copytree(os.path.join(c.buildPath, self.config.prefixPath[1:]), dest, symlinks=True)
