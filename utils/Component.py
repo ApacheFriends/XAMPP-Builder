@@ -37,7 +37,7 @@ class Component(object):
             'patch',
             'configure',
             'build',
-            'install'
+            'install',
             'universalize'
         ]
 
