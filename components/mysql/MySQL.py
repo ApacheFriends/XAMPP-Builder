@@ -83,7 +83,7 @@ class MySQL(Component):
         filesToCopy.extend([ file['file'] for file in changes['changed'] ])
 
         for src in filesToCopy:
-            dest = os.path.join(self.buildPath, file[1:])
+            dest = os.path.join(self.buildPath, src[1:])
 
             if not os.path.isdir(os.path.dirname(dest)):
                 os.makedirs(os.path.dirname(dest))
