@@ -413,31 +413,31 @@ class Builder(object):
         return dependents
 
     def dependencies(self, args):
-        if not self.options.missing and not len(args):
-            components_to_consider = self.components.values()
+        if not len(args):
+            components_to_consider = []
         else:
             components_to_consider = self.findComponents(args)
 
-            if self.options.missing:
-                for c in self.components.values():
-                    if not os.path.isdir(c.buildPath):
-                        components_to_consider.append(c)
+        if self.options.missing:
+            for c in self.components.values():
+                if not os.path.isdir(c.buildPath):
+                    components_to_consider.append(c)
 
-            # Find all components that are directly or indirectly
-            # depended on these components
+        # Find all components that are directly or indirectly
+        # depended on these components
 
-            foundNew = True
+        foundNew = True
 
-            while foundNew:
-                foundNew = False
+        while foundNew:
+            foundNew = False
 
-                for c in components_to_consider:
-                    dependents = self.componentsDependingOn(c)
+            for c in components_to_consider:
+                dependents = self.componentsDependingOn(c)
 
-                    for d in dependents:
-                        if d not in components_to_consider:
-                            components_to_consider.append(d)
-                            foundNew = True
+                for d in dependents:
+                    if d not in components_to_consider:
+                        components_to_consider.append(d)
+                        foundNew = True
 
 
         resolved = []
