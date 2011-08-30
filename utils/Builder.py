@@ -173,9 +173,12 @@ class Builder(object):
             print "%s: Download '%s'..." % (c.name, c.download_url),
             sys.stdout.flush()
             try:
-                urllib.urlretrieve(c.download_url, c.sourceArchiveFile  + '.temp')
+                def reportHook(blocks, blockSize, totalSize):
+                    print "\r%s: Download '%s' %i%%" % (c.name, c.download_url, 100*blocks*blockSize/totalSize),
+
+                urllib.urlretrieve(c.download_url, c.sourceArchiveFile  + '.temp', reportHook)
                 os.rename(c.sourceArchiveFile  + '.temp', c.sourceArchiveFile)
-                print 'done.'
+                print "%s: Download '%s' done." % (c.name, c.download_url)
             except:
                 print 'failed!'
                 raise
@@ -410,7 +413,7 @@ class Builder(object):
         return dependents
 
     def dependencies(self, args):
-        if not len(args):
+        if not self.options.missing and not len(args):
             components_to_consider = self.components.values()
         else:
             components_to_consider = self.findComponents(args)
@@ -438,7 +441,7 @@ class Builder(object):
 
 
         resolved = []
-        unhandled = components_to_consider
+        unhandled = list(set(components_to_consider))
 
         while len(unhandled):
             for c in unhandled:
