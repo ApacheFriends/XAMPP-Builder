@@ -54,7 +54,7 @@ class Dependency(object):
 
         vars = {
             'COMPONENT_PATH': c_root,
-            'INCLUDE_PATH': os.path.join(c_root, 'includes', component.includeDir or ''),
+            'INCLUDE_PATH': os.path.join(c_root, 'include', component.includeDir or ''),
             'LIB_PATH': os.path.join(c_root, 'lib', component.libDir or '')
         }
 
