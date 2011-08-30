@@ -23,7 +23,6 @@ class MySQL(Component):
 
         self.download_url = 'http://ftp.gwdg.de/pub/misc/mysql/Downloads/MySQL-%s.%s/mysql-%s.tar.gz' % (major, minor, self.version)
         self.includeDir = 'mysql'
-        self.libDir = 'mysql'
 
         self.dependencies = [
             Dependency('ZLib', configureFlags=["-DWITH_ZLIB=${COMPONENT_PATH}"])
