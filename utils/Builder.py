@@ -141,6 +141,7 @@ class Builder(object):
         # the build dir of these will be deleted on exit, because
         # they are not clean
         self.uncleanComponents = []
+        self.installToolchainPath = None
 
         atexit.register(self.cleanUp)
 
@@ -558,7 +559,8 @@ class Builder(object):
         copytree(os.path.join(c.buildPath, self.config.prefixPath[1:]), dest, symlinks=True)
 
     def cleanUp(self):
-        shutil.rmtree(self.installToolchainPath, ignore_errors=True)
+        if self.installToolchainPath:
+            shutil.rmtree(self.installToolchainPath, ignore_errors=True)
         for c in self.uncleanComponents:
             shutil.rmtree(c.buildPath, ignore_errors=True)
 
