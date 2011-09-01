@@ -11,6 +11,7 @@ import atexit
 import collections
 import json
 import shutil
+from stat import S_IRUSR, S_IRGRP, S_IXUSR, S_IWUSR, S_IXGRP, S_IROTH, S_IXOTH
 import string
 import sys
 import os
@@ -26,6 +27,81 @@ from utils.Config import Config
 from utils.FileUniversalizer import MachOUniversalizer
 from utils.file import digestsInPath, copytree
 from components import KNOWN_COMPONENTS
+
+chown_tool = """#!/usr/bin/env python
+
+import sys
+import os
+import os.path
+import json
+
+log_dir="${LOG_DIR}"
+
+with open(os.path.join(log_dir, "chown.json"), "a") as f:
+    info = {"args": sys.argv[1:], "pwd": os.getcwd()}
+    json.dump(info, f)
+    f.write(",\\n")
+
+"""
+
+chmod_tool = """#!/usr/bin/env python
+
+import sys
+import os
+import os.path
+import json
+
+log_dir="${LOG_DIR}"
+
+with open(os.path.join(log_dir, "chmod.json"), "a") as f:
+    info = {"args": sys.argv[1:], "pwd": os.getcwd()}
+    json.dump(info, f)
+    f.write(",\\n")
+
+"""
+
+install_tool = """#!/usr/bin/env python
+
+import sys
+import os
+import os.path
+import json
+from subprocess import check_call
+
+from optparse import OptionParser
+
+log_dir="${LOG_DIR}"
+
+parser = OptionParser()
+
+parser.add_option("-b", action="store_true")
+parser.add_option("-C", action="store_true")
+parser.add_option("-c", action="store_true")
+parser.add_option("-p", action="store_true")
+parser.add_option("-S", action="store_true")
+parser.add_option("-s", action="store_true")
+parser.add_option("-v", action="store_true")
+
+parser.add_option("-d", action="store_true", dest="make_dir")
+
+parser.add_option("-m", dest="mode")
+parser.add_option("-g", dest="group")
+parser.add_option("-o", dest="owner")
+
+(options, args) = parser.parse_args()
+
+with open(os.path.join(log_dir, "install.json"), "a") as f:
+    info = {"mode":options.mode, "group":options.group, "owner":options.owner, "pwd": os.getcwd(), "sources":args[:-1], "dest":args[-1]}
+    json.dump(info, f)
+    f.write(",\\n")
+
+if options.make_dir:
+	for d in args:
+		os.makedirs(d)
+else:
+	check_call(["cp"] + args)
+
+"""
 
 # Helpers
 def commonInDict(dictA, dictB):
@@ -62,6 +138,11 @@ class Builder(object):
         self.config = None
         self.components = {}
         self.fileUniversalizer = [MachOUniversalizer()]
+        # the build dir of these will be deleted on exit, because
+        # they are not clean
+        self.uncleanComponents = []
+
+        atexit.register(self.cleanUp)
 
     def run(self):
         (action, args) = self.parseCommandlineArguments()
@@ -188,7 +269,10 @@ class Builder(object):
     def build(self, args):
         components = self.findComponents(args)
 
+        self.setupInstallToolchain()
+
         for c in components:
+            self.uncleanComponents.append(c)
 
             if c.supportsOnPassUniversalBuild or len(self.config.archs) <= 1:
                 for step in c.buildSteps:
@@ -253,6 +337,8 @@ class Builder(object):
                     else:
                         raise StandardError("Don't now how to run step %s" % str(step))
 
+            self.uncleanComponents.remove(c)
+
 
     def unpackComponent(self, c):
         # Change our working dir to the source dir
@@ -291,6 +377,7 @@ class Builder(object):
         command = c.configureCommand()
         commandArguments.extend(c.computedConfigureFlags())
         environment = dict(os.environ)
+        environment['PATH'] = "%s/bin:%s" % (self.installToolchainPath, environment['PATH'])
 
         for (key, value) in c.configureEnvironment().iteritems():
             environment[key] = value
@@ -323,6 +410,7 @@ class Builder(object):
         command = c.buildCommand()
         commandArguments.extend(c.computedBuildFlags())
         environment = dict(os.environ)
+        environment['PATH'] = "%s/bin:%s" % (self.installToolchainPath, environment['PATH'])
 
         for (key, value) in c.buildEnvironment().iteritems():
             environment[key] = value
@@ -354,6 +442,7 @@ class Builder(object):
         command = c.installCommand()
         commandArguments.extend(c.computedInstallFlags())
         environment = dict(os.environ)
+        environment['PATH'] = "%s/bin:%s" % (self.installToolchainPath, environment['PATH'])
 
         for (key, value) in c.installEnvironment().iteritems():
             environment[key] = string.Template(value).safe_substitute({'DEST_DIR': dest_dir})
@@ -467,3 +556,34 @@ class Builder(object):
             dest = self.config.prefixPath
 
         copytree(os.path.join(c.buildPath, self.config.prefixPath[1:]), dest, symlinks=True)
+
+    def cleanUp(self):
+        shutil.rmtree(self.installToolchainPath, ignore_errors=True)
+        for c in self.uncleanComponents:
+            shutil.rmtree(c.buildPath, ignore_errors=True)
+
+    def setupInstallToolchain(self):
+        self.installToolchainPath = mkdtemp(prefix="xampp-builder-install-toolchain")
+
+        os.mkdir(os.path.join(self.installToolchainPath, "bin"))
+
+        log_dir = os.path.join(self.installToolchainPath, "logs")
+
+        os.mkdir(log_dir)
+
+        mode755 = S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH
+
+        with open(os.path.join(self.installToolchainPath, "bin", "chmod"), "w") as f:
+            f.write(string.Template(chmod_tool).safe_substitute({"LOG_DIR": log_dir}))
+
+        os.chmod(os.path.join(self.installToolchainPath, "bin", "chmod"), mode755)
+
+        with open(os.path.join(self.installToolchainPath, "bin", "chown"), "w") as f:
+            f.write(string.Template(chown_tool).safe_substitute({"LOG_DIR": log_dir}))
+
+        os.chmod(os.path.join(self.installToolchainPath, "bin", "chown"), mode755)
+
+        with open(os.path.join(self.installToolchainPath, "bin", "install"), "w") as f:
+            f.write(string.Template(install_tool).safe_substitute({"LOG_DIR": log_dir}))
+
+        os.chmod(os.path.join(self.installToolchainPath, "bin", "install"), mode755)
