@@ -28,7 +28,7 @@ from utils.FileUniversalizer import MachOUniversalizer
 from utils.file import digestsInPath, copytree
 from components import KNOWN_COMPONENTS
 
-chown_tool = """#!/usr/bin/env python
+chown_tool = """#!/usr/bin/python
 
 import sys
 import os
@@ -44,7 +44,7 @@ with open(os.path.join(log_dir, "chown.json"), "a") as f:
 
 """
 
-chmod_tool = """#!/usr/bin/env python
+chmod_tool = """#!/usr/bin/python
 
 import sys
 import os
@@ -60,7 +60,7 @@ with open(os.path.join(log_dir, "chmod.json"), "a") as f:
 
 """
 
-install_tool = """#!/usr/bin/env python
+install_tool = """#!/usr/bin/python
 
 import sys
 import os
