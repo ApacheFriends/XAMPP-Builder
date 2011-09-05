@@ -34,6 +34,7 @@ import sys
 import os
 import os.path
 import json
+from subprocess import check_call
 
 log_dir="${LOG_DIR}"
 
@@ -41,6 +42,8 @@ with open(os.path.join(log_dir, "chown.json"), "a") as f:
     info = {"args": sys.argv[1:], "pwd": os.getcwd()}
     json.dump(info, f)
     f.write(",\\n")
+
+check_call(["/bin/chmod"] + args[1:])
 
 """
 
@@ -166,6 +169,11 @@ class Builder(object):
         parser.add_option("-c", "--config", dest="config",
                           default="default.ini",
                           help="The config used for building XAMPP.")
+
+        parser.add_option("", "--no-clean-on-failure",
+                          dest="no_clean_on_failure",
+                          action="store_true", default=False,
+                          help="Don't remove files the build fails.")
 
         group = OptionGroup(parser, "Dependency Options (dep)")
 
@@ -378,7 +386,7 @@ class Builder(object):
         command = c.configureCommand()
         commandArguments.extend(c.computedConfigureFlags())
         environment = dict(os.environ)
-        environment['PATH'] = "%s/bin:%s" % (self.installToolchainPath, environment['PATH'])
+        #environment['PATH'] = "%s/bin:%s" % (self.installToolchainPath, environment['PATH'])
 
         for (key, value) in c.configureEnvironment().iteritems():
             environment[key] = value
@@ -402,7 +410,7 @@ class Builder(object):
         for key in environment.copy():
             environment[key] = self.substituteArchVariables(environment[key], archs)
 
-        print("==> Configure %s" % c.name)
+        print("==> Configure %s %s" % (c.name, environment))
         check_call([command] + commandArguments, env=environment)
 
     def runBuildCommand(self, c, archs):
@@ -561,8 +569,10 @@ class Builder(object):
     def cleanUp(self):
         if self.installToolchainPath:
             shutil.rmtree(self.installToolchainPath, ignore_errors=True)
-        for c in self.uncleanComponents:
-            shutil.rmtree(c.buildPath, ignore_errors=True)
+
+        if not self.options.no_clean_on_failure:
+            for c in self.uncleanComponents:
+                shutil.rmtree(c.buildPath, ignore_errors=True)
 
     def setupInstallToolchain(self):
         self.installToolchainPath = mkdtemp(prefix="xampp-builder-install-toolchain")

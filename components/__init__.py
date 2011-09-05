@@ -14,6 +14,7 @@ import components.expat.Expat
 import components.apache.Apache
 import components.mysql.MySQL
 import components.proftpd.ProFTPd
+import components.perl.Perl
 
 KNOWN_COMPONENTS = [
     components.zlib.ZLib,
@@ -24,5 +25,6 @@ KNOWN_COMPONENTS = [
     components.expat.Expat,
     components.apache.Apache,
     components.mysql.MySQL,
-    components.proftpd.ProFTPd
+    components.proftpd.ProFTPd,
+    components.perl.Perl
 ]
