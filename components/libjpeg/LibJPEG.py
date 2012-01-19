@@ -9,6 +9,7 @@
 from utils.Component import Component
 from utils.Dependency import Dependency
 
+import os
 import os.path
 
 class LibJPEG(Component):
@@ -21,6 +22,16 @@ class LibJPEG(Component):
 	def installFlags(self):
 		return [
 			"install",
-			"prefix=${DEST_DIR}/${PREFIX}"
+			"prefix=${DEST_DIR}${PREFIX}"
 		]
+		
+	def createCommonDirectories(self, component, archs, builder):
+		dirs = [
+			'bin',
+			'lib',
+			'include'
+		]
+		
+		for d in dirs:
+			path = os.makedirs(self.buildPath + os.path.join(self.config.prefixPath, d))
 
