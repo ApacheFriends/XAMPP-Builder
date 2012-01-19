@@ -18,3 +18,9 @@ class LibJPEG(Component):
 
 		self.download_url = 'http://switch.dl.sourceforge.net/sourceforge/libjpeg/jpegsrc.v%s.tar.gz' % self.version
 
+	def installFlags(self):
+		return [
+			"install",
+			"prefix=${DEST_DIR}/${PREFIX}"
+		]
+
