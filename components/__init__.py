@@ -18,6 +18,7 @@ import components.apache.Apache
 import components.mysql.MySQL
 import components.proftpd.ProFTPd
 import components.perl.Perl
+import components.postgresql.Postgresql
 
 KNOWN_COMPONENTS = [
 	components.zlib.ZLib,
@@ -32,5 +33,6 @@ KNOWN_COMPONENTS = [
 	components.apache.Apache,
 	components.mysql.MySQL,
 	components.proftpd.ProFTPd,
-	components.perl.Perl
+	components.perl.Perl,
+	components.postgresql.Postgresql
 ]
