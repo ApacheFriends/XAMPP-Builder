@@ -43,7 +43,7 @@ with open(os.path.join(log_dir, "chown.json"), "a") as f:
     json.dump(info, f)
     f.write(",\\n")
 
-check_call(["/bin/chmod"] + args[1:])
+check_call(["/bin/chmod"] + sys.argv[1:])
 
 """
 
