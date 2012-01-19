@@ -31,7 +31,8 @@ class LibJPEG(Component):
 		dirs = [
 			'bin',
 			'lib',
-			'include'
+			'include',
+			'man/man1'
 		]
 		
 		for d in dirs:
