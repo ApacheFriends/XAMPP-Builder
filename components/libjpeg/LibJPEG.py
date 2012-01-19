@@ -16,5 +16,5 @@ class LibJPEG(Component):
 	def __init__(self, config):
 		super(LibJPEG, self).__init__('LibJPEG', os.path.dirname(__file__), config)
 
-		self.download_url = 'http://freshmeat.net/redir/libjpeg/5665/url_tgz/jpegsrc.v%s.tar.gz' % self.version
+		self.download_url = 'http://switch.dl.sourceforge.net/sourceforge/libjpeg/jpegsrc.v%s.tar.gz' % self.version
 
