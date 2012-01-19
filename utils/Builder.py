@@ -386,7 +386,9 @@ class Builder(object):
         command = c.configureCommand()
         commandArguments.extend(c.computedConfigureFlags())
         environment = dict(os.environ)
-        #environment['PATH'] = "%s/bin:%s" % (self.installToolchainPath, environment['PATH'])
+        
+        # TODO: This was commented out, why?
+        environment['PATH'] = "%s/bin:%s" % (self.installToolchainPath, environment['PATH'])
 
         for (key, value) in c.configureEnvironment().iteritems():
             environment[key] = value
@@ -599,3 +601,6 @@ class Builder(object):
             f.write(string.Template(install_tool).safe_substitute({"LOG_DIR": log_dir}))
 
         os.chmod(os.path.join(self.installToolchainPath, "bin", "install"), mode755)
+        
+        
+        
