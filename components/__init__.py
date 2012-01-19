@@ -21,9 +21,9 @@ import components.perl.Perl
 KNOWN_COMPONENTS = [
 	components.zlib.ZLib,
 	components.openssl.OpenSSL,
-	components.libjpeg.LibJPEG
+	components.libjpeg.LibJPEG,
 #	components.libltdl.LibLTDL,
-	components.libpng.LibPNG
+	components.libpng.LibPNG,
 	components.ncurses.Ncurses,
 	components.sqlite.SQLite,
 	components.expat.Expat,
