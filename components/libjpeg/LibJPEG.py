@@ -18,6 +18,8 @@ class LibJPEG(Component):
 		super(LibJPEG, self).__init__('LibJPEG', os.path.dirname(__file__), config)
 
 		self.download_url = 'http://switch.dl.sourceforge.net/sourceforge/libjpeg/jpegsrc.v%s.tar.gz' % self.version
+		
+		self.buildSteps.insert(self.buildSteps.index('install'), self.createCommonDirectories)
 
 	def installFlags(self):
 		return [
