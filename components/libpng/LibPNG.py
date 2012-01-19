@@ -19,6 +19,6 @@ class LibPNG(Component):
 		self.download_url = 'http://switch.dl.sourceforge.net/sourceforge/libpng/libpng-%s.tar.bz2' % self.version
 
 		self.dependencies = [
-			Dependency('ZLib', configureFlags=["--with-z=${COMPONENT_PATH}"]),
+			Dependency('ZLib', configureFlags=["--with-zlib-prefix=${COMPONENT_PATH}"]),
 		]
 
