@@ -11,6 +11,7 @@ import components.libjpeg.LibJPEG
 import components.libltdl.LibLTDL
 import components.libpng.LibPNG
 import components.libxml.LibXML
+import components.libxslt.LibXSLT
 import components.ncurses.Ncurses
 import components.sqlite.SQLite
 import components.expat.Expat
@@ -28,6 +29,7 @@ KNOWN_COMPONENTS = [
 #	components.libltdl.LibLTDL,
 	components.libpng.LibPNG,
 	components.libxml.LibXML,
+	components.libxslt.LibXSLT,
 	components.ncurses.Ncurses,
 	components.sqlite.SQLite,
 	components.expat.Expat,
