@@ -10,6 +10,7 @@ import components.openssl.OpenSSL
 import components.libjpeg.LibJPEG
 import components.libltdl.LibLTDL
 import components.libpng.LibPNG
+import components.libungif.LibUnGIF
 import components.libxml.LibXML
 import components.libxslt.LibXSLT
 import components.ncurses.Ncurses
@@ -28,6 +29,7 @@ KNOWN_COMPONENTS = [
 	components.libjpeg.LibJPEG,
 #	components.libltdl.LibLTDL,
 	components.libpng.LibPNG,
+	components.libungif.LibUnGIF,
 	components.libxml.LibXML,
 	components.libxslt.LibXSLT,
 	components.ncurses.Ncurses,
