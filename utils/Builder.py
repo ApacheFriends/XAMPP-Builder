@@ -577,7 +577,7 @@ class Builder(object):
 		for c in self.uncleanComponents:
 			if self.options.no_clean_on_failure:
 				print("Wanring: won't remove %s..." % c.buildPath)
-			else
+			else:
 				shutil.rmtree(c.buildPath, ignore_errors=True)
 
 	def setupInstallToolchain(self):
