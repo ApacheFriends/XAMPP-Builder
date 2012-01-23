@@ -569,9 +569,11 @@ class Builder(object):
 		copytree(os.path.join(c.buildPath, self.config.prefixPath[1:]), dest, symlinks=True)
 
 	def cleanUp(self):
-		if self.installToolchainPath and not self.options.no_clean_on_failure:
-			print("Wanring: won't remove %s..." % self.installToolchainPath)
-			shutil.rmtree(self.installToolchainPath, ignore_errors=True)
+		if self.installToolchainPath:
+			if self.options.no_clean_on_failure:
+				print("Wanring: won't remove %s..." % self.installToolchainPath)
+			else:
+				shutil.rmtree(self.installToolchainPath, ignore_errors=True)
 
 		
 		for c in self.uncleanComponents:
