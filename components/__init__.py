@@ -13,10 +13,13 @@ import components.libpng.LibPNG
 import components.libungif.LibUnGIF
 import components.libxml.LibXML
 import components.libxslt.LibXSLT
+import components.mcrypt.MCrypt
+import components.mhash.MHash
 import components.ncurses.Ncurses
 import components.sqlite.SQLite
 import components.expat.Expat
 import components.freetype.FreeType
+import components.gettext.Gettext
 import components.apache.Apache
 import components.mysql.MySQL
 import components.proftpd.ProFTPd
@@ -32,10 +35,13 @@ KNOWN_COMPONENTS = [
 	components.libungif.LibUnGIF,
 	components.libxml.LibXML,
 	components.libxslt.LibXSLT,
+	components.mcrypt.MCrypt,
+	components.mhash.MHash,
 	components.ncurses.Ncurses,
 	components.sqlite.SQLite,
 	components.expat.Expat,
 	components.freetype.FreeType,
+#	components.gettext.Gettext,
 	components.apache.Apache,
 	components.mysql.MySQL,
 	components.proftpd.ProFTPd,
