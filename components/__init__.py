@@ -18,6 +18,7 @@ import components.mhash.MHash
 import components.ncurses.Ncurses
 import components.sqlite.SQLite
 import components.expat.Expat
+import components.freetds.FreeTDS
 import components.freetype.FreeType
 import components.gettext.Gettext
 import components.apache.Apache
@@ -40,6 +41,7 @@ KNOWN_COMPONENTS = [
 	components.ncurses.Ncurses,
 	components.sqlite.SQLite,
 	components.expat.Expat,
+	components.freetds.FreeTDS,
 	components.freetype.FreeType,
 #	components.gettext.Gettext,
 	components.apache.Apache,
