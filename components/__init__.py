@@ -14,6 +14,7 @@ import components.libxml.LibXML
 import components.ncurses.Ncurses
 import components.sqlite.SQLite
 import components.expat.Expat
+import components.freetype.FreeType
 import components.apache.Apache
 import components.mysql.MySQL
 import components.proftpd.ProFTPd
@@ -30,9 +31,10 @@ KNOWN_COMPONENTS = [
 	components.ncurses.Ncurses,
 	components.sqlite.SQLite,
 	components.expat.Expat,
+	components.freetype.FreeType,
 	components.apache.Apache,
 	components.mysql.MySQL,
 	components.proftpd.ProFTPd,
 	components.perl.Perl,
-	components.postgresql.Postgresql
+#	components.postgresql.Postgresql
 ]
