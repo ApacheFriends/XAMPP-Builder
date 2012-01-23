@@ -264,6 +264,8 @@ class Builder(object):
 			sys.stdout.flush()
 			try:
 				def reportHook(blocks, blockSize, totalSize):
+					if totalSize == 0:
+						totalSize = 1
 					print "\r%s: Download '%s' %i%%" % (c.name, c.download_url, 100*blocks*blockSize/totalSize),
 
 				urllib.urlretrieve(c.download_url, c.sourceArchiveFile  + '.temp', reportHook)
