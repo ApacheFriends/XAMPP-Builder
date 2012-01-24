@@ -58,4 +58,4 @@ class Dependency(object):
             'LIB_PATH': os.path.join(c_root, 'lib', component.libDir or '')
         }
 
-        return map(lambda x: Template(x).substitute(vars), value)
+        return map(lambda x: Template(forComponent.substituteCommonVariables(x)).substitute(vars), value)

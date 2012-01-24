@@ -27,6 +27,7 @@ from utils.Config import Config
 from utils.FileUniversalizer import MachOUniversalizer
 from utils.file import digestsInPath, copytree
 from components import KNOWN_COMPONENTS
+from utils.Sandbox import Sandbox
 
 chown_tool = """#!/usr/bin/python
 
@@ -291,12 +292,16 @@ class Builder(object):
 						self.unpackComponent(c)
 					elif step == 'patch':
 						self.patchComponent(c)
+					elif step == 'setupSandbox':
+						self.setupBuildSandboxCommand(c)
 					elif step == 'configure':
 						self.runConfigureCommand(c, self.config.archs)
 					elif step == 'build':
 						self.runBuildCommand(c, self.config.archs)
 					elif step == 'install':
 						self.runInstallCommand(c, c.buildPath)
+					elif step == 'tearDownSandbox':
+						self.tearDownBuildSandboxCommand(c)
 					elif step == 'universalize':
 						# Universalize is not needed in one pass builds
 						pass
@@ -329,12 +334,16 @@ class Builder(object):
 							self.unpackComponent(c)
 						elif step == 'patch':
 							self.patchComponent(c)
+						elif step == 'setupSandbox':
+							self.setupBuildSandboxCommand(c)
 						elif step == 'configure':
 							self.runConfigureCommand(c, archs=[arch])
 						elif step == 'build':
 							self.runBuildCommand(c, archs=[arch])
 						elif step == 'install':
 							self.runInstallCommand(c, c.buildPath)
+						elif step == 'tearDownSandbox':
+							self.tearDownBuildSandboxCommand(c)
 						elif isinstance(step, collections.Callable):
 							step(component=c, archs=[arch], builder=self)
 						else:
@@ -380,7 +389,12 @@ class Builder(object):
 		os.chdir(c.workingDir)
 
 		for patch in c.patches:
-			check_call(['patch', '-p0', '-i', os.path.join(c.patches_dir, patch)])
+			if patch.endswith('.zip'):
+				check_call(['unzip','-o', os.path.join(c.patches_dir, patch), '-d', '.'])
+			elif patch.endswith('.patch'):
+				check_call(['patch', '-p0', '-i', os.path.join(c.patches_dir, patch)])
+			else:
+				raise StandardError("Do not know how to apply %s" % patch)
 
 	def runConfigureCommand(self, c, archs):
 		commandArguments = []
@@ -610,5 +624,17 @@ class Builder(object):
 
 		os.chmod(os.path.join(self.installToolchainPath, "bin", "install"), mode755)
 		
-		
+	def setupBuildSandboxCommand(self, component):
+		self.sandbox = Sandbox([d.componentName for d in component.dependencies], self)
+
+		print("==> Setup build sandbox")
+
+		self.sandbox.setup()
+
+	
+	def tearDownBuildSandboxCommand(self, component):
+		if self.sandbox:
+			print("==> Tear down build sandbox")
+			self.sandbox.tearDown()
+			self.sandbox = None
 		

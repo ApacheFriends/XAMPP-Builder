@@ -20,6 +20,19 @@ class LibJPEG(Component):
 		self.download_url = 'http://switch.dl.sourceforge.net/sourceforge/libjpeg/jpegsrc.v%s.tar.gz' % self.version
 		
 		self.buildSteps.insert(self.buildSteps.index('install'), self.createCommonDirectories)
+		
+		self.patches = [
+			'libtool135update.zip'
+		]
+		
+	def configureFlags(self):
+		flags = super(LibJPEG, self).configureFlags()
+
+		flags.extend([
+			'--enable-shared'
+		])
+		
+		return flags
 
 	def installFlags(self):
 		return [
@@ -36,5 +49,7 @@ class LibJPEG(Component):
 		]
 		
 		for d in dirs:
-			path = os.makedirs(self.buildPath + os.path.join(self.config.prefixPath, d))
+			dir = self.buildPath + os.path.join(self.config.prefixPath, d)
+			if not os.path.isdir(dir):
+				path = os.makedirs(dir)
 

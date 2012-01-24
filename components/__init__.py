@@ -25,6 +25,7 @@ import components.apache.Apache
 import components.mysql.MySQL
 import components.proftpd.ProFTPd
 import components.perl.Perl
+import components.php5.PHP5
 import components.postgresql.Postgresql
 
 KNOWN_COMPONENTS = [
@@ -48,5 +49,6 @@ KNOWN_COMPONENTS = [
 	components.mysql.MySQL,
 	components.proftpd.ProFTPd,
 	components.perl.Perl,
+	components.php5.PHP5
 #	components.postgresql.Postgresql
 ]

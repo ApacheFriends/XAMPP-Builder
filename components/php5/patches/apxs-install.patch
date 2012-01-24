@@ -1,0 +1,44 @@
+--- sapi/apache/config.m4-orig	2005-05-29 18:16:45.000000000 -0500
++++ sapi/apache/config.m4	2006-02-19 15:35:08.776668766 -0600
+@@ -91,7 +91,7 @@
+     APACHE_INSTALL="$APXS -i -a -n php5 $SAPI_SHARED" # Old apxs does not have -S option
+   else 
+     APXS_LIBEXECDIR='$(INSTALL_ROOT)'`$APXS -q LIBEXECDIR`
+-    if test -z `$APXS -q SYSCONFDIR`; then
++    if test ! -d '$(INSTALL_ROOT)'`$APXS -q SYSCONFDIR`; then
+       APACHE_INSTALL="\$(mkinstalldirs) '$APXS_LIBEXECDIR' && \
+                        $APXS -S LIBEXECDIR='$APXS_LIBEXECDIR' \
+                              -i -n php5 $SAPI_SHARED"
+--- sapi/apache_hooks/config.m4-orig	2005-05-29 18:16:46.000000000 -0500
++++ sapi/apache_hooks/config.m4	2006-02-19 15:29:13.138753131 -0600
+@@ -92,7 +92,7 @@
+     APACHE_HOOKS_INSTALL="$APXS -i -a -n php5 $SAPI_SHARED" # Old apxs does not have -S option
+   else 
+     APXS_LIBEXECDIR='$(INSTALL_ROOT)'`$APXS -q LIBEXECDIR`
+-    if test -z `$APXS -q SYSCONFDIR`; then
++    if test ! -d '$(INSTALL_ROOT)'`$APXS -q SYSCONFDIR`; then
+       APACHE_HOOKS_INSTALL="\$(mkinstalldirs) '$APXS_LIBEXECDIR' && \
+                        $APXS -S LIBEXECDIR='$APXS_LIBEXECDIR' \
+                              -i -n php5 $SAPI_SHARED"
+--- sapi/apache2handler/config.m4-orig	2005-09-01 09:33:47.000000000 -0500
++++ sapi/apache2handler/config.m4	2006-02-19 15:31:59.595098850 -0600
+@@ -65,7 +65,7 @@
+   fi
+ 
+   APXS_LIBEXECDIR='$(INSTALL_ROOT)'`$APXS -q LIBEXECDIR`
+-  if test -z `$APXS -q SYSCONFDIR`; then
++  if test ! -d '$(INSTALL_ROOT)'`$APXS -q SYSCONFDIR`; then
+     INSTALL_IT="\$(mkinstalldirs) '$APXS_LIBEXECDIR' && \
+                  $APXS -S LIBEXECDIR='$APXS_LIBEXECDIR' \
+                        -i -n php5"
+--- sapi/apache2filter/config.m4-orig	2006-02-19 15:44:18.710306537 -0600
++++ sapi/apache2filter/config.m4	2006-02-19 15:26:00.038833483 -0600
+@@ -66,7 +66,7 @@
+   fi
+ 
+   APXS_LIBEXECDIR='$(INSTALL_ROOT)'`$APXS -q LIBEXECDIR`
+-  if test -z `$APXS -q SYSCONFDIR`; then
++  if test ! -d '$(INSTALL_ROOT)'`$APXS -q SYSCONFDIR`; then
+     INSTALL_IT="\$(mkinstalldirs) '$APXS_LIBEXECDIR' && \
+                  $APXS -S LIBEXECDIR='$APXS_LIBEXECDIR' \
+                        -i -n php5"
