@@ -29,6 +29,8 @@ from utils.file import digestsInPath, copytree
 from components import KNOWN_COMPONENTS
 from utils.Sandbox import Sandbox
 
+from utils.MacOSXPackager import MacOSXPackager
+
 chown_tool = """#!/usr/bin/python
 
 import sys
@@ -160,12 +162,14 @@ class Builder(object):
 			self.download(args)
 		elif action == 'dep':
 			self.dependencies(args)
+		elif action == 'pack':
+			self.pack(args)
 		else:
 			print "Unknown action '%s'" % action
 			sys.exit(1)
 
 	def parseCommandlineArguments(self):
-		parser = OptionParser(usage="Usage: %prog [options] download|build|dep [component(s)]")
+		parser = OptionParser(usage="Usage: %prog [options] (download|build|dep [component(s)])|(pack dest-file dev-dest-file)")
 
 		parser.add_option("-c", "--config", dest="config",
 						  default="default.ini",
@@ -637,4 +641,8 @@ class Builder(object):
 			print("==> Tear down build sandbox")
 			self.sandbox.tearDown()
 			self.sandbox = None
+	
+	def pack(self, args):
+		packager = MacOSXPackager(self)
 		
+		packager.packXAMPP(None, "/Applications/XAMPP", None)
