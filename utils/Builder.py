@@ -546,7 +546,7 @@ class Builder(object):
 
 		if self.options.missing:
 			for c in self.components.values():
-				if c.isBuild:
+				if not c.isBuild:
 					components_to_consider.append(c)
 
 		# Find all components that are directly or indirectly
