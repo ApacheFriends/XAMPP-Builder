@@ -19,7 +19,7 @@ class Config(object):
         self.platform = platform
 
         self.configParser = SafeConfigParser({
-            'confdir': '%(prefix)s/etc'
+            'confdir': '%(prefix)s/etc',
         })
         self.configParser.read([self.config_file])
         
@@ -40,6 +40,10 @@ class Config(object):
     @property
     def prefixPath(self):
         return self.preparePath(self.configParser.get(self.platform, 'prefix'))
+    
+    @property
+    def destPath(self):
+        return self.preparePath(self.configParser.get(self.platform, 'dest'))
         
     @property
     def confdirPath(self):

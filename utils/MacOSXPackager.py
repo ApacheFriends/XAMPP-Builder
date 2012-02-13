@@ -65,7 +65,7 @@ class MacOSXPackager(Packager):
 		return self._workPath
 
 	
-	def packXAMPP(self, version, xamppPath, xamppDMGPath):
+	def packXAMPP(self, version, xamppDMGPath):
 		# Get template image
 		# Convert it to rw and resize
 		# Render new background
@@ -82,13 +82,19 @@ class MacOSXPackager(Packager):
 		(device, dir) = self.attachImage(tmpDisk)
 		
 		print("=> Copy XAMPP files")
-		check_call(['ditto', xamppPath, os.path.join(dir, 'XAMPP')])
+		for name, c in self.builder.components.iteritems():
+			if c.isBuild:
+				self.builder.copyComponent(c, os.path.join(dir, 'XAMPP'), includeDevelopmentFiles=False)
+		
+		print("=> Set version")
+		with open(os.path.join(dir, 'XAMPP', 'xamppfiles', 'lib', 'VERSION'), 'w') as f:
+			f.write(version)
 		
 		print("=> Unmount image")
 		self.detachImage(device)
 		
 		print("=> Compress and make image readonly")
-		self.convertImage(tmpDisk, '/Users/kleinweby/Desktop/xampp-test.dmg', True)
+		self.convertImage(tmpDisk, xamppDMGPath, True)
 		
 	
 	def attachImage(self, imagePath):
@@ -108,5 +114,5 @@ class MacOSXPackager(Packager):
 		check_call(['hdiutil', 'resize', '-size', size, image])
 	
 	def detachImage(self, device):
-		check_call(['hdiutil', 'detach', device])
+		check_call(['hdiutil', 'detach', '-force', device])
 		

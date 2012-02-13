@@ -153,7 +153,7 @@ class Builder(object):
 
 	def run(self):
 		(action, args) = self.parseCommandlineArguments()
-
+		
 		self.setupComponents()
 
 		if action == 'build':
@@ -164,12 +164,14 @@ class Builder(object):
 			self.dependencies(args)
 		elif action == 'pack':
 			self.pack(args)
+		elif action == 'packDev':
+			self.packDev(args)
 		else:
 			print "Unknown action '%s'" % action
 			sys.exit(1)
 
 	def parseCommandlineArguments(self):
-		parser = OptionParser(usage="Usage: %prog [options] (download|build|dep [component(s)])|(pack dest-file dev-dest-file)")
+		parser = OptionParser(usage="Usage: %prog [options] (download|build|dep [component(s)])|(pack version dest-file)|(packDev version dest-file)")
 
 		parser.add_option("-c", "--config", dest="config",
 						  default="default.ini",
@@ -179,7 +181,7 @@ class Builder(object):
 						  dest="no_clean_on_failure",
 						  action="store_true", default=False,
 						  help="Don't remove files the build fails.")
-
+		
 		group = OptionGroup(parser, "Dependency Options (dep)")
 
 		group.add_option("", "--json", dest="json",
@@ -309,6 +311,8 @@ class Builder(object):
 					elif step == 'universalize':
 						# Universalize is not needed in one pass builds
 						pass
+					elif step == 'createManifest':
+						self.createManifestAndClearLog(c)
 					elif isinstance(step, collections.Callable):
 						step(component=c, archs=self.config.archs, builder=self)
 					else:
@@ -356,6 +360,8 @@ class Builder(object):
 				for step in archIndependentSteps:
 					if step == 'universalize':
 						self.universalizeComponent(c, arch_build_dirs)
+					elif step == 'createManifest':
+						self.createManifestAndClearLog(c)
 					elif isinstance(step, collections.Callable):
 						step(component=c, archs=self.config.archs, builder=self)
 					else:
@@ -540,7 +546,7 @@ class Builder(object):
 
 		if self.options.missing:
 			for c in self.components.values():
-				if not os.path.isdir(c.buildPath):
+				if c.isBuild:
 					components_to_consider.append(c)
 
 		# Find all components that are directly or indirectly
@@ -582,19 +588,39 @@ class Builder(object):
 			for c in resolved:
 				print(c.name.lower())
 
-	def copyComponent(self, c, dest=None):
+	def copyComponent(self, c, dest=None, includeDevelopmentFiles=True):
 		if dest is None:
 			dest = self.config.prefixPath
-
-		copytree(os.path.join(c.buildPath, self.config.prefixPath[1:]), dest, symlinks=True)
-
+		
+		manifest = None
+		with open(c.manifestPath, 'r') as f:
+			manifest = json.load(f)
+		
+		files = manifest['release'].keys()
+		
+		if includeDevelopmentFiles:
+			files.append(manifest['dev'].keys())
+		
+		for file in files:
+			srcFile = os.path.join(c.buildPath, file[1:])
+			destFile = os.path.join(dest, os.path.relpath(file, self.config.destPath))
+			
+			if os.path.islink(srcFile):
+				linkto = os.readlink(srcFile)
+				os.symlink(linkto, destFile)
+			elif os.path.isdir(srcFile):
+				if not os.path.isdir(destFile):
+					os.makedirs(destFile)
+			else:
+				shutil.copy2(srcFile, destFile)
+	
 	def cleanUp(self):
 		if self.installToolchainPath:
 			if self.options.no_clean_on_failure:
 				print("Wanring: won't remove %s..." % self.installToolchainPath)
 			else:
 				shutil.rmtree(self.installToolchainPath, ignore_errors=True)
-
+		
 		
 		for c in self.uncleanComponents:
 			if self.options.no_clean_on_failure:
@@ -627,7 +653,287 @@ class Builder(object):
 			f.write(string.Template(install_tool).safe_substitute({"LOG_DIR": log_dir}))
 
 		os.chmod(os.path.join(self.installToolchainPath, "bin", "install"), mode755)
+	
+	def createManifestAndClearLog(self, component):
+		manifest={'dev': {}, 'release':{}}
 		
+		chmodLogFile = os.path.join(self.installToolchainPath, "logs", 'chmod.json')
+		chownLogFile = os.path.join(self.installToolchainPath, "logs", 'chown.json')
+		installLogFile = os.path.join(self.installToolchainPath, "logs", 'install.json')
+		
+		chmodManifest = self.manifestFromChmodLog(chmodLogFile)
+		chownManifest = self.manifestFromChownLog(chownLogFile)
+		installManifest = self.manifestFromInstallLog(installLogFile)
+		
+		for root, dirs, files in os.walk(component.buildPath):
+			for dirname in dirs:
+				dir = os.path.join(root, dirname)
+				
+				user=None
+				group=None
+				mode=None
+				
+				if dir in chmodManifest:
+					mode = chmodManifest[dir]['mode']
+					
+				if dir in chownManifest:
+					if 'user' in chownManifest[dir]:
+						user = chownManifest[dir]['user']
+					if 'group' in chownManifest[dir]:
+						group = chownManifest[dir]['group']
+						
+				if dir in installManifest:
+					if 'user' in installManifest[dir]:
+						user = installManifest[dir]['user']
+					if 'group' in installManifest[dir]:
+						group = installManifest[dir]['group']
+					if 'mode' in installManifest[dir]:
+						mode = installManifest[dir]['mode']
+				
+				if user is None:
+					user = 'nobody'
+				if group is None:
+					group = 'nogroup'
+				if mode is None:
+					mode = '755'
+				
+				installPath = '/' + os.path.relpath(dir, component.buildPath)
+				
+				if not installPath.startswith(self.config.destPath):
+					continue
+				
+				if component.isPathDevelopmentOnly(installPath):
+					manifest['dev'][installPath] = {
+						'user': user,
+						'group': group,
+						'mode': mode
+					}
+				else:
+					manifest['release'][installPath] = {
+						'user': user,
+						'group': group,
+						'mode': mode
+					}
+			
+			for filename in files:
+				file = os.path.join(root, filename)
+				
+				user=None
+				group=None
+				mode=None
+				
+				if file in chmodManifest:
+					mode = chmodManifest[file]['mode']
+					
+				if file in chownManifest:
+					if 'user' in chownManifest[file]:
+						user = chownManifest[file]['user']
+					if 'group' in chownManifest[file]:
+						group = chownManifest[file]['group']
+						
+				if file in installManifest:
+					if 'user' in installManifest[file]:
+						user = installManifest[file]['user']
+					if 'group' in installManifest[file]:
+						group = installManifest[file]['group']
+					if 'mode' in installManifest[file]:
+						mode = installManifest[file]['mode']
+				
+				if user is None:
+					user = 'nobody'
+				if group is None:
+					group = 'nogroup'
+				if mode is None:
+					mode = '644'
+				
+				installPath = '/' + os.path.relpath(file, component.buildPath)
+				
+				if not installPath.startswith(self.config.destPath):
+					continue
+				
+				if component.isPathDevelopmentOnly(installPath):
+					manifest['dev'][installPath] = {
+						'user': user,
+						'group': group,
+						'mode': mode
+					}
+				else:
+					manifest['release'][installPath] = {
+						'user': user,
+						'group': group,
+						'mode': mode
+					}
+			
+		
+		with open(component.manifestPath, 'w') as f:
+			json.dump(manifest, f);
+		
+		if os.path.isfile(chmodLogFile):
+			os.remove(chmodLogFile)
+		if os.path.isfile(chownLogFile):
+			os.remove(chownLogFile)
+		if os.path.isfile(installLogFile):
+			os.remove(installLogFile)
+	
+	def manifestFromChmodLog(self, chmodLogFile):
+		logContent = None
+		manifest = {}
+		
+		if not os.path.isfile(chmodLogFile):
+			return manifest;
+		
+		with open(chmodLogFile, 'r') as f:
+			string = f.read()
+			logContent = json.loads('[' + string + 'null]')
+		
+		if logContent is not None:
+			for command in logContent:
+				files=[]
+				mode=None
+				recursive=False
+				
+				if command is None:
+					continue
+				
+				for arg in command['args']:
+					if arg == '-R' or arg == '-r':
+						recursive=True
+					elif arg.startswith('-'):
+						# Ignore all options for now
+						continue
+					elif mode is None:
+						mode = arg
+					else:
+						file = os.path.join(command['pwd'], arg)
+						files.append(file)
+						if recursive:
+							files.extend(self.listOfPathsBelow(file))
+				
+				for file in files:
+					if file not in manifest:
+						manifest[file] = {}
+					
+					manifest[file]['mode'] = mode
+		
+		return manifest
+	
+	def manifestFromChownLog(self, chmodLogFile):
+		logContent = None
+		manifest = {}
+		
+		if not os.path.isfile(chmodLogFile):
+			return manifest;
+		
+		with open(chmodLogFile, 'r') as f:
+			string = f.read()
+			logContent = json.loads('[' + string + 'null]')
+		
+		if logContent is not None:
+			for command in logContent:
+				files=[]
+				user=None
+				group=None
+				recursive=False
+				
+				if command is None:
+					continue
+				
+				for arg in command['args']:
+					if arg == '-R' or arg == '-r':
+						recursive=True
+					elif arg.startswith('-'):
+						# Ignore all options for now
+						continue
+					elif user is None and group is None:
+						(user, group) = arg.split(':')
+					else:
+						file = os.path.join(command['pwd'], arg)
+						files.append(file)
+						if recursive:
+							files.extend(self.listOfPathsBelow(file))
+				
+				
+				for file in files:
+					if file not in manifest:
+						manifest[file] = {}
+					
+					if len(user) > 0:
+						manifest[file]['user'] = user
+					if group is not None and len(group) > 0:
+						manifest[file]['group'] = group
+		
+		return manifest
+	
+	def manifestFromInstallLog(self, chmodLogFile):
+		logContent = None
+		manifest = {}
+		
+		if not os.path.isfile(chmodLogFile):
+			return manifest;
+		
+		with open(chmodLogFile, 'r') as f:
+			string = f.read()
+			logContent = json.loads('[' + string + 'null]')
+		
+		if logContent is not None:
+			for command in logContent:
+				files=[]
+				remainingArgs=[]
+				user=None
+				nextIsUser=False
+				group=None
+				nextIsGroup=False
+				mode=None
+				nextIsMode=False
+				
+				if command is None:
+					continue
+				
+				for arg in command['args']:
+					if arg == '-g':
+						nextIsGroup=True
+					elif arg == '-u':
+						nextIsUser=True
+					elif arg == '-m':
+						nextIsMode=True
+					elif arg.startswith('-'):
+						# Ignore all options for now
+						continue
+					else:
+						files.append(arg)
+				
+				if len(remainingArgs) > 2 or remainingArgs[-1].endswith('/'):
+					destDir = remainingArgs[-1]
+					for file in remainingArgs[:-1]:
+						files.append(os.path.join(destDir, os.path.basename(file)))
+				else:
+					files.append(remainingArgs[-1])
+				
+				
+				for file in files:
+					if file not in manifest:
+						manifest[file] = {}
+					
+					if user is not None and len(user) > 0:
+						manifest[file]['user'] = user
+					if group is not None and len(group) > 0:
+						manifest[file]['group'] = group
+					if mode is not None and len(mode) > 0:
+						manifest[file]['mode'] = mode
+		
+		return manifest
+
+	def listOfPathsBelow(self, path):
+		paths=[]
+		
+		for root, dirs, files in os.walk(path):
+			for dir in dirs:
+				paths.append(os.path.join(root, dir))
+			for file in files:
+				paths.append(os.path.join(root, file))
+		
+		return paths
+
 	def setupBuildSandboxCommand(self, component):
 		self.sandbox = Sandbox([d.componentName for d in component.dependencies], self)
 
@@ -645,4 +951,7 @@ class Builder(object):
 	def pack(self, args):
 		packager = MacOSXPackager(self)
 		
-		packager.packXAMPP(None, "/Applications/XAMPP", None)
+		version=args[0]
+		destPath=args[1]
+		
+		packager.packXAMPP(version, destPath)
