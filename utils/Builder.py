@@ -878,36 +878,21 @@ class Builder(object):
 		if logContent is not None:
 			for command in logContent:
 				files=[]
-				remainingArgs=[]
-				user=None
-				nextIsUser=False
-				group=None
-				nextIsGroup=False
-				mode=None
-				nextIsMode=False
 				
 				if command is None:
 					continue
+
+				user=command['owner']
+				group=command['group']
+				mode=command['mode']
+				sources=command['sources']
+				dest=command['dest']
 				
-				for arg in command['args']:
-					if arg == '-g':
-						nextIsGroup=True
-					elif arg == '-u':
-						nextIsUser=True
-					elif arg == '-m':
-						nextIsMode=True
-					elif arg.startswith('-'):
-						# Ignore all options for now
-						continue
-					else:
-						files.append(arg)
-				
-				if len(remainingArgs) > 2 or remainingArgs[-1].endswith('/'):
-					destDir = remainingArgs[-1]
-					for file in remainingArgs[:-1]:
-						files.append(os.path.join(destDir, os.path.basename(file)))
+				if len(sources) > 1 or dest.endswith('/'):
+					for file in sources:
+						files.append(os.path.join(dest, os.path.basename(file)))
 				else:
-					files.append(remainingArgs[-1])
+					files.append(dest)
 				
 				
 				for file in files:
