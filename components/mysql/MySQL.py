@@ -63,16 +63,16 @@ class MySQL(Component):
 
         sandbox.setup()
 
-        if not os.path.isdir(os.path.join(sandbox.path, 'etc')):
-            os.makedirs(os.path.join(sandbox.path, 'etc'))
+        if not os.path.isdir(os.path.join(sandbox.path, "xamppfiles", 'etc')):
+            os.makedirs(os.path.join(sandbox.path, "xamppfiles", 'etc'))
 
         # Install config file
         shutil.copy(
             os.path.join(self.resourcesPath, 'my.cnf'),
-            os.path.join(sandbox.path, 'etc/my.cnf')
+            os.path.join(sandbox.path, "xamppfiles", 'etc/my.cnf')
         )
 
-        check_call([os.path.join(sandbox.path, "bin/mysql_install_db"), "--datadir=%s" % os.path.join(sandbox.path, "var/mysql/")])
+        check_call([os.path.join(sandbox.path, "xamppfiles", "bin/mysql_install_db"), "--datadir=%s" % os.path.join(sandbox.path, "var/mysql/")])
 
         changes = sandbox.changes()
 
