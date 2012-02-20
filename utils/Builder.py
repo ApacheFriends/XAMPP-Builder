@@ -599,7 +599,7 @@ class Builder(object):
 		files = manifest['release'].keys()
 		
 		if includeDevelopmentFiles:
-			files.append(manifest['dev'].keys())
+			files.extend(manifest['dev'].keys())
 		
 		for file in sorted(files):
 			srcFile = os.path.join(c.buildPath, file[1:])
