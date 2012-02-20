@@ -44,7 +44,7 @@ class Perl(Component):
 
         sandbox.setup()
 
-        perl_lib = os.path.join(sandbox.path, 'lib', 'perl5', self.version)
+        perl_lib = os.path.join(sandbox.path, 'xamppfiles', 'lib', 'perl5', self.version)
 
         # Install config files
         shutil.copy(
@@ -59,16 +59,16 @@ class Perl(Component):
             os.path.join(perl_lib, 'CPANPLUS/Config/System.pm')
         )
 
-        check_call([os.path.join(sandbox.path, 'bin/cpanp'),'s','selfupdate','core'])
+        check_call([os.path.join(sandbox.path, 'xamppfiles', 'bin/cpanp'),'s','selfupdate','core'])
 
-        check_call([os.path.join(sandbox.path, 'bin/perl'),
+        check_call([os.path.join(sandbox.path, 'xamppfiles', 'bin/perl'),
                     os.path.join(self.resourcesPath, 'upgrade_modules.pl')])
 
         modules = ['MLDBM', 'Digest::MD5', 'MLDBM::Sync', 'Apache::ASP']
         for module in modules:
-            check_call([os.path.join(sandbox.path, 'bin/cpanp'), 'i', module, '--skiptest', '--verbose'])
+            check_call([os.path.join(sandbox.path, 'xamppfiles', 'bin/cpanp'), 'i', module, '--skiptest', '--verbose'])
 
-        shutil.rmtree(os.path.join(sandbox.path, 'var'))
+        shutil.rmtree(os.path.join(sandbox.path, 'xamppfiles', 'var'))
 
         changes = sandbox.changes()
 
