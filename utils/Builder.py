@@ -11,6 +11,7 @@ import atexit
 import collections
 import json
 import shutil
+import stat
 from stat import S_IRUSR, S_IRGRP, S_IXUSR, S_IWUSR, S_IXGRP, S_IROTH, S_IXOTH
 import string
 import sys
@@ -698,7 +699,7 @@ class Builder(object):
 				if group is None:
 					group = 'nogroup'
 				if mode is None:
-					mode = '755'
+					mode = '%o' % stat.S_IMODE(os.stat(dir).st_mode)
 				else:
 					#Ensure that the directory is always tranversable ("x")
 					mode = '%o' % (int(mode, 8) | S_IXUSR | S_IXGRP | S_IXOTH)
@@ -753,7 +754,7 @@ class Builder(object):
 				if group is None:
 					group = 'nogroup'
 				if mode is None:
-					mode = '644'
+					mode = '%o' % stat.S_IMODE(os.stat(file).st_mode)
 				
 				installPath = '/' + os.path.relpath(file, component.buildPath)
 				
