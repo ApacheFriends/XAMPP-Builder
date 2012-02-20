@@ -595,13 +595,13 @@ class Builder(object):
 		manifest = None
 		with open(c.manifestPath, 'r') as f:
 			manifest = json.load(f)
-		
-		files = manifest['release'].keys()
-		
+				
+		definitions = manifest['release']
+
 		if includeDevelopmentFiles:
-			files.extend(manifest['dev'].keys())
+			definitions.update(manifest['dev'])
 		
-		for file in sorted(files):
+		for file in sorted(definitions.keys()):
 			srcFile = os.path.join(c.buildPath, file[1:])
 			destFile = os.path.join(dest, os.path.relpath(file, self.config.destPath))
 			
@@ -613,6 +613,8 @@ class Builder(object):
 					os.makedirs(destFile)
 			else:
 				shutil.copy2(srcFile, destFile)
+			
+			os.chmod(destFile, int(definitions[file]['mode'], 8))
 	
 	def cleanUp(self):
 		if self.installToolchainPath:
@@ -697,6 +699,9 @@ class Builder(object):
 					group = 'nogroup'
 				if mode is None:
 					mode = '755'
+				else:
+					#Ensure that the directory is always tranversable ("x")
+					mode = '%o' % (int(mode, 8) | S_IXUSR | S_IXGRP | S_IXOTH)
 				
 				installPath = '/' + os.path.relpath(dir, component.buildPath)
 				
