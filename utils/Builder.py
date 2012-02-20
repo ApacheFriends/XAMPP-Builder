@@ -590,7 +590,7 @@ class Builder(object):
 
 	def copyComponent(self, c, dest=None, includeDevelopmentFiles=True):
 		if dest is None:
-			dest = self.config.prefixPath
+			dest = self.config.destPath
 		
 		manifest = None
 		with open(c.manifestPath, 'r') as f:

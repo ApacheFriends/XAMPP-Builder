@@ -40,7 +40,7 @@ class Sandbox(object):
                 for d in c.dependencies:
                     self.componentsToUse.add(self.builder.findComponent(d.componentName))
 
-        self._path = builder.config.prefixPath
+        self._path = builder.config.destPath
         self.isSetup = False
 
     @property
