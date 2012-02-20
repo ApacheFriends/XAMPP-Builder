@@ -601,14 +601,14 @@ class Builder(object):
 		if includeDevelopmentFiles:
 			files.append(manifest['dev'].keys())
 		
-		for file in files:
+		for file in sorted(files):
 			srcFile = os.path.join(c.buildPath, file[1:])
 			destFile = os.path.join(dest, os.path.relpath(file, self.config.destPath))
 			
 			if os.path.islink(srcFile):
 				linkto = os.readlink(srcFile)
 				os.symlink(linkto, destFile)
-			elif os.path.isdir(srcFile):
+			elif os.path.isdir(srcFile) or srcFile.endswith('/'):
 				if not os.path.isdir(destFile):
 					os.makedirs(destFile)
 			else:
@@ -627,6 +627,7 @@ class Builder(object):
 				print("Wanring: won't remove %s..." % c.buildPath)
 			else:
 				shutil.rmtree(c.buildPath, ignore_errors=True)
+				shutil.rmtree(c.manifestPath, ignore_errors=True)
 
 	def setupInstallToolchain(self):
 		self.installToolchainPath = mkdtemp(prefix="xampp-builder-install-toolchain")
@@ -701,6 +702,9 @@ class Builder(object):
 				
 				if not installPath.startswith(self.config.destPath):
 					continue
+
+				if not installPath.endswith('/'):
+					installPath = installPath + '/'
 				
 				if component.isPathDevelopmentOnly(installPath):
 					manifest['dev'][installPath] = {
