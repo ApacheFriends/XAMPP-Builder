@@ -615,7 +615,7 @@ class Builder(object):
 			else:
 				shutil.copy2(srcFile, destFile)
 			
-			os.chmod(destFile, int(definitions[file]['mode'], 8))
+			os.lchmod(destFile, int(definitions[file]['mode'], 8))
 	
 	def cleanUp(self):
 		if self.installToolchainPath:
@@ -699,7 +699,7 @@ class Builder(object):
 				if group is None:
 					group = 'nogroup'
 				if mode is None:
-					mode = '%o' % stat.S_IMODE(os.stat(dir).st_mode)
+					mode = '%o' % stat.S_IMODE(os.lstat(dir).st_mode)
 				else:
 					#Ensure that the directory is always tranversable ("x")
 					mode = '%o' % (int(mode, 8) | S_IXUSR | S_IXGRP | S_IXOTH)
@@ -754,7 +754,7 @@ class Builder(object):
 				if group is None:
 					group = 'nogroup'
 				if mode is None:
-					mode = '%o' % stat.S_IMODE(os.stat(file).st_mode)
+					mode = '%o' % stat.S_IMODE(os.lstat(file).st_mode)
 				
 				installPath = '/' + os.path.relpath(file, component.buildPath)
 				
