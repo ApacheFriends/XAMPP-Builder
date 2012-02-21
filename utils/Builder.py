@@ -615,7 +615,15 @@ class Builder(object):
 			else:
 				shutil.copy2(srcFile, destFile)
 			
-			os.lchmod(destFile, int(definitions[file]['mode'], 8))
+			try:
+				os.lchmod(destFile, int(definitions[file]['mode'], 8))
+			except Exception, e:
+				print "Supress lchmod error %s" % str(e)
+				try:
+					os.chmod(destFile, int(definitions[file]['mode'], 8))
+				except Exception, e:
+					print "Supress chmod error %s" % str(e)
+			
 	
 	def cleanUp(self):
 		if self.installToolchainPath:
